@@ -1,7 +1,6 @@
 import base64
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 from app.branding import LOGO_PATH, inject_css
 from beacon.config import load_config
@@ -20,34 +19,18 @@ def _logo_data_uri() -> str | None:
     return f"data:image/png;base64,{b64}"
 
 
-def _fragment_to_query_bridge():
-    """Supabase puts magic-link tokens in the URL fragment (#access_token=...).
-    Streamlit only reads query params. This JS converts the fragment to a query string
-    and reloads, so handle_callback() can read access_token via st.query_params.
-    """
-    components.html(
-        """
-        <script>
-          (function(){
-            const h = window.parent.location.hash;
-            if (!h) return;
-            if (h.indexOf('access_token=') === -1 && h.indexOf('error=') === -1) return;
-            const params = new URLSearchParams(h.substring(1));
-            const url = new URL(window.parent.location.href);
-            url.hash = '';
-            params.forEach((v, k) => url.searchParams.set(k, v));
-            window.parent.location.replace(url.toString());
-          })();
-        </script>
-        """,
-        height=0,
-    )
+def _friendly_otp_error(e: Exception) -> str:
+    msg = str(e).lower()
+    if "rate limit" in msg:
+        return "Too many sign-in attempts. Please wait ~30 minutes and try again."
+    if "expired" in msg or "invalid" in msg:
+        return "That code is incorrect or has expired. Request a new one."
+    return f"Sign-in failed: {e}"
 
 
 def login_screen():
-    cfg = load_config()
+    load_config()  # validates env at startup; no callback redirect needed for OTP flow
     inject_css()
-    _fragment_to_query_bridge()
 
     logo_uri = _logo_data_uri()
     logo_html = (
@@ -59,45 +42,65 @@ def login_screen():
         <div class="login-shell">
           {logo_html}
           <h1>Beacon Training Matrix</h1>
-          <div class="login-tag">Sign in to access your training compliance dashboard.</div>
+          <div class="login-tag">Enter your work email — we'll send a 6-digit code.</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # Show any auth error surfaced from the fragment-to-query bridge
-    params = st.query_params
-    if "error" in params or "error_code" in params:
-        st.error(
-            "Sign-in link expired or invalid. Please request a new magic link below."
-        )
-        st.query_params.clear()
+    stage = st.session_state.get("otp_stage", "request_email")
 
-    email = st.text_input(
-        "Work email", placeholder="you@beaconrisk.co.uk", label_visibility="collapsed"
-    )
-    if st.button("Send magic link", use_container_width=True) and email:
-        sb = anon_client()
-        try:
-            sb.auth.sign_in_with_otp({
-                "email": email,
-                "options": {"email_redirect_to": cfg.app_base_url},
-            })
-            st.success("Check your inbox — the sign-in link expires in 60 minutes.")
-        except Exception as e:
-            msg = str(e).lower()
-            if "rate limit" in msg:
-                st.warning(
-                    "You've requested too many sign-in emails recently. "
-                    "Please wait ~30 minutes before trying again."
-                )
-            elif "not allowed" in msg or "redirect" in msg:
-                st.error(
-                    "Sign-in is misconfigured. Ask an admin to add this URL to "
-                    "Supabase's allowed redirect list."
-                )
-            else:
-                st.error(f"Sign-in failed: {e}")
+    if stage == "request_email":
+        email = st.text_input(
+            "Work email",
+            placeholder="you@beaconrisk.co.uk",
+            label_visibility="collapsed",
+            key="otp_email_input",
+        )
+        if st.button("Send 6-digit code", use_container_width=True) and email:
+            sb = anon_client()
+            try:
+                # shouldCreateUser controls whether new users are created.
+                # Keep default (True) so the trigger creates app_users rows on first sign-in.
+                sb.auth.sign_in_with_otp({"email": email})
+                st.session_state["otp_email"] = email
+                st.session_state["otp_stage"] = "verify_code"
+                st.rerun()
+            except Exception as e:
+                st.error(_friendly_otp_error(e))
+
+    elif stage == "verify_code":
+        target_email = st.session_state.get("otp_email", "")
+        st.info(f"Code sent to **{target_email}**. Check your inbox.")
+        code = st.text_input(
+            "6-digit code",
+            placeholder="123456",
+            max_chars=6,
+            label_visibility="collapsed",
+            key="otp_code_input",
+        )
+        col_a, col_b = st.columns([3, 1])
+        with col_a:
+            verify_clicked = st.button("Verify and sign in", use_container_width=True)
+        with col_b:
+            if st.button("Use different email", use_container_width=True):
+                st.session_state["otp_stage"] = "request_email"
+                st.rerun()
+        if verify_clicked and code:
+            sb = anon_client()
+            try:
+                response = sb.auth.verify_otp({
+                    "email": target_email,
+                    "token": code.strip(),
+                    "type": "email",
+                })
+                session = getattr(response, "session", response)
+                st.session_state["sb_session"] = session
+                st.session_state.pop("otp_stage", None)
+                st.session_state.pop("otp_email", None)
+                st.rerun()
+            except Exception as e:
+                st.error(_friendly_otp_error(e))
 
     st.markdown(
         '<div style="margin-top:18px; color:#8896AA; font-size:0.8rem; text-align:center;">'
@@ -108,24 +111,8 @@ def login_screen():
 
 
 def handle_callback():
-    """Read access_token from query params after magic-link redirect.
-    Tokens arrive in the URL fragment and are converted to query params by
-    `_fragment_to_query_bridge()` (runs on the login screen).
-    """
-    params = st.query_params
-    access_token = params.get("access_token")
-    refresh_token = params.get("refresh_token", "")
-    if access_token:
-        sb = anon_client()
-        try:
-            response = sb.auth.set_session(access_token, refresh_token)
-            # supabase-py 2.x returns an AuthResponse with .session
-            session = getattr(response, "session", response)
-            st.session_state["sb_session"] = session
-        except Exception as e:
-            st.error(f"Could not establish session: {e}")
-        st.query_params.clear()
-        st.rerun()
+    """No-op under OTP flow. Kept for backwards compatibility with require_auth."""
+    return
 
 
 def current_user_role() -> str | None:
