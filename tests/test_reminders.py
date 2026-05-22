@@ -1,6 +1,6 @@
 from datetime import date
 
-from beacon.reminders import build_digest, classify_window, find_due_items
+from beacon.reminders import build_digest, classify_window, compliance_summary, find_due_items
 
 
 def test_classify_window_expired_today():
@@ -66,6 +66,31 @@ def test_build_digest_groups_by_window_and_skips_empty():
     assert "First Aid" in html
     assert "29 May 2026" in html
     assert "90 days" not in html
+
+
+def test_compliance_summary_counts_and_score():
+    today = date(2026, 5, 22)
+    records = [
+        {"expiry_date": date(2026, 5, 1)},    # expired
+        {"expiry_date": date(2026, 5, 27)},   # 7-day
+        {"expiry_date": date(2026, 6, 10)},   # 30-day
+        {"expiry_date": date(2026, 8, 1)},    # 90-day
+        {"expiry_date": date(2027, 1, 1)},    # safe
+        {"expiry_date": None},                # lifetime — excluded
+    ]
+    s = compliance_summary(records, today=today)
+    assert s["total"] == 5
+    assert s["expired"] == 1
+    assert s["week"] == 1
+    assert s["month"] == 1
+    assert s["quarter"] == 1
+    assert s["safe"] == 1
+    # at_risk = expired + week = 2; total = 5 → score = (5-2)/5 = 60
+    assert s["score"] == 60
+
+
+def test_compliance_summary_empty_returns_100():
+    assert compliance_summary([], today=date(2026, 5, 22))["score"] == 100
 
 
 def test_build_digest_empty_returns_none():

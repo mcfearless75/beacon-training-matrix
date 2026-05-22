@@ -24,12 +24,14 @@ with st.sidebar:
     st.markdown(
         """
         **Quick navigation**
-        - **Dashboard** — what's expiring
-        - **Matrix** — full traffic-light view
+        - **Dashboard** — compliance score + what's expiring
+        - **Matrix** — full traffic-light view + bulk update
         - **People** — workforce records
         - **Training Types** — qualification catalogue
         - **Settings** — import + reminder config
         - **Admin** — audit log + manual reminders
+        - **Profile** — drill into one person
+        - **Timeline** — 12-month renewal calendar
         """
     )
 

@@ -13,6 +13,44 @@ WINDOW_LABELS = [
 ]
 
 
+def compliance_summary(records: list[dict], today: date) -> dict:
+    """Aggregate compliance metrics across active training records with expiry dates.
+
+    Returns counts per window plus a single compliance score:
+    score = % of records that are NOT expired AND NOT within 7 days (i.e. compliant
+    or planned). Records without an expiry are excluded from the denominator since
+    they're lifetime certificates.
+    """
+    counts = {"expired": 0, "7": 0, "30": 0, "90": 0, "safe": 0}
+    total = 0
+    for r in records:
+        exp = r.get("expiry_date")
+        if not exp:
+            continue
+        total += 1
+        window = classify_window(exp, today=today)
+        if window is None:
+            counts["safe"] += 1
+        else:
+            counts[window] += 1
+
+    if total == 0:
+        score = 100
+    else:
+        at_risk = counts["expired"] + counts["7"]
+        score = round(100 * (total - at_risk) / total)
+
+    return {
+        "total": total,
+        "expired": counts["expired"],
+        "week": counts["7"],
+        "month": counts["30"],
+        "quarter": counts["90"],
+        "safe": counts["safe"],
+        "score": score,
+    }
+
+
 def classify_window(expiry: date, today: date) -> Optional[str]:
     """Return the reminder window ("expired", "7", "30", "90") or None."""
     if expiry <= today:

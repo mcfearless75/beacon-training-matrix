@@ -295,6 +295,133 @@ BRAND_CSS = """
     box-shadow: 0 4px 12px rgba(244,132,95,0.28);
   }
 
+  /* Profile page */
+  .profile-card {
+    display: flex; align-items: center; gap: 20px;
+    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    padding: 24px 28px; margin-bottom: 18px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  }
+  .profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, #F4845F 0%, #E5663C 100%);
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 700;
+    box-shadow: 0 4px 14px rgba(244,132,95,0.32);
+  }
+  .profile-name {font-size: 1.35rem; font-weight: 700; color: #0F172A; letter-spacing: -0.015em;}
+  .profile-job {color: #475569; font-size: 0.95rem; margin-top: 2px;}
+  .profile-start {color: #94A3B8; font-size: 0.82rem; margin-top: 4px;}
+  .profile-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin-bottom: 22px;
+  }
+  .profile-stat {
+    background: white; border: 1px solid #ECEEF2; border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .profile-stat .ps-value {
+    font-size: 1.8rem; font-weight: 700; line-height: 1;
+    letter-spacing: -0.02em; color: #0F172A;
+    font-variant-numeric: tabular-nums;
+  }
+  .profile-stat .ps-label {
+    color: #64748B; font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; margin-top: 8px;
+  }
+  @media (max-width: 700px) {
+    .profile-stats {grid-template-columns: repeat(2, 1fr);}
+  }
+
+  /* Timeline (renewal calendar) */
+  .timeline-card {
+    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    padding: 24px 28px 20px 28px; margin-bottom: 22px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  }
+  .tl-chart {
+    display: flex; gap: 6px; align-items: flex-end;
+    height: 220px; padding-bottom: 8px;
+    overflow-x: auto;
+  }
+  .tl-col {
+    flex: 1 0 60px; min-width: 60px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+  .tl-count {
+    font-size: 0.85rem; font-weight: 700; color: #0F172A;
+    margin-bottom: 4px; font-variant-numeric: tabular-nums;
+  }
+  .tl-bar-wrap {
+    width: 80%; flex: 1; display: flex; align-items: flex-end;
+    background: #F8FAFC; border-radius: 6px 6px 0 0; padding-top: 4px;
+  }
+  .tl-bar {
+    width: 100%; border-radius: 6px 6px 0 0;
+    transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.08);
+  }
+  .tl-bar-wrap:hover .tl-bar {filter: brightness(1.08);}
+  .tl-expired-badge {
+    margin-top: 4px;
+    background: #FEE2E2; color: #B91C1C;
+    font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  }
+  .tl-month {
+    color: #64748B; font-size: 0.74rem; font-weight: 600;
+    margin-top: 8px; letter-spacing: 0.02em;
+  }
+
+  /* Compliance hero (Dashboard) */
+  .compliance-hero {
+    display: grid; grid-template-columns: minmax(180px, 240px) 1fr;
+    gap: 28px; align-items: center;
+    background: white; border: 1px solid #ECEEF2; border-radius: 18px;
+    padding: 28px 32px; margin-bottom: 22px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    position: relative; overflow: hidden;
+  }
+  .compliance-hero::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #F4845F 0%, #FFB74D 50%, #F4845F 100%);
+  }
+  .compliance-hero .ch-left {
+    border-right: 1px solid #ECEEF2; padding-right: 28px;
+  }
+  .compliance-hero .ch-score {
+    font-size: 4.5rem; font-weight: 800; line-height: 1;
+    letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+  }
+  .compliance-hero .ch-score span {font-size: 2rem; font-weight: 700; margin-left: 2px; opacity: 0.8;}
+  .compliance-hero .ch-label {
+    color: #64748B; font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px;
+  }
+  .compliance-hero .ch-status {
+    font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .compliance-hero .ch-msg {color: #475569; font-size: 0.92rem; margin-bottom: 18px;}
+  .compliance-hero .ch-bar {
+    display: flex; height: 12px; border-radius: 6px;
+    overflow: hidden; background: #F1F5F9; margin-bottom: 10px;
+  }
+  .compliance-hero .ch-bar > div {transition: width 0.4s ease;}
+  .compliance-hero .ch-bar-key {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    font-size: 0.82rem; color: #64748B; font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .compliance-hero .ch-bar-key b {margin-right: 4px; font-size: 0.7rem;}
+
+  @media (max-width: 700px) {
+    .compliance-hero {grid-template-columns: 1fr; gap: 18px; padding: 22px;}
+    .compliance-hero .ch-left {border-right: none; border-bottom: 1px solid #ECEEF2; padding-right: 0; padding-bottom: 18px;}
+    .compliance-hero .ch-score {font-size: 3.5rem;}
+  }
+
   /* Colour legend bar (Matrix page) */
   .legend-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
