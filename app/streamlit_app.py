@@ -40,23 +40,14 @@ page_header(
 
 # Hero "what does this do" block
 st.markdown(
-    """
-    <div style="
-      background: white; border: 1px solid #E5E9F2; border-radius: 16px;
-      padding: 24px 28px; margin-bottom: 22px;
-      box-shadow: 0 4px 14px rgba(13,27,42,0.04);
-    ">
-      <div style="font-size: 1.1rem; font-weight: 600; color: #0D1B2A; margin-bottom: 8px;">
-        What this app does
-      </div>
-      <div style="color: #5B6B85; line-height: 1.6;">
-        Beacon Training Matrix replaces the spreadsheet you used to track who needs
-        which training and when it expires. It shows you at a glance what's overdue
-        and what's coming up, and it emails a daily digest <b>90, 30, and 7 days</b>
-        before any record expires — and on the day it expires.
-      </div>
-    </div>
-    """,
+    '<div class="hero-card">'
+    '<div class="hero-title">What this app does</div>'
+    '<div class="hero-body">'
+    'Beacon Training Matrix replaces the spreadsheet you used to track who needs '
+    'which training and when it expires. It shows you at a glance what is overdue '
+    'and what is coming up, and it emails a daily digest <b>90, 30, and 7 days</b> '
+    'before any record expires — and on the day it expires.'
+    '</div></div>',
     unsafe_allow_html=True,
 )
 
@@ -64,58 +55,38 @@ st.markdown(
 st.markdown("#### How to use it")
 c1, c2, c3 = st.columns(3, gap="medium")
 
-step_style = (
-    "background: white; border: 1px solid #E5E9F2; border-radius: 14px; "
-    "padding: 20px 22px; height: 100%; "
-    "box-shadow: 0 2px 8px rgba(13,27,42,0.03);"
-)
-num_style = (
-    "display:inline-block; width:30px; height:30px; line-height:30px; "
-    "text-align:center; border-radius:50%; "
-    "background:linear-gradient(135deg,#F4845F,#E5663C); color:white; "
-    "font-weight:700; font-size:0.9rem; margin-bottom:10px;"
-)
+def _step_card(num: str, title: str, body_html: str) -> str:
+    return (
+        '<div class="step-card">'
+        f'<div class="step-num">{num}</div>'
+        f'<div class="step-title">{title}</div>'
+        f'<div class="step-body">{body_html}</div>'
+        '</div>'
+    )
+
 
 with c1:
     st.markdown(
-        f"""
-        <div style="{step_style}">
-          <div style="{num_style}">1</div>
-          <div style="font-weight:600; color:#0D1B2A; margin-bottom:6px;">Set up your data</div>
-          <div style="color:#5B6B85; font-size:0.9rem; line-height:1.55;">
-            Add your team in <b>People</b>. Add the qualifications you track in
-            <b>Training Types</b>. Or upload your existing spreadsheet in <b>Settings</b>.
-          </div>
-        </div>
-        """,
+        _step_card(
+            "1", "Set up your data",
+            "Add your team in <b>People</b>. Add the qualifications you track in <b>Training Types</b>. Or upload your existing spreadsheet in <b>Settings</b>."
+        ),
         unsafe_allow_html=True,
     )
 with c2:
     st.markdown(
-        f"""
-        <div style="{step_style}">
-          <div style="{num_style}">2</div>
-          <div style="font-weight:600; color:#0D1B2A; margin-bottom:6px;">Record completions</div>
-          <div style="color:#5B6B85; font-size:0.9rem; line-height:1.55;">
-            On the <b>Matrix</b> page, click a person + training type and enter the
-            completion and expiry dates. Leave expiry blank for lifetime certificates.
-          </div>
-        </div>
-        """,
+        _step_card(
+            "2", "Record completions",
+            "On the <b>Matrix</b> page, pick a person and a training type, enter the completion and expiry dates, hit Save. Leave expiry blank for lifetime certificates."
+        ),
         unsafe_allow_html=True,
     )
 with c3:
     st.markdown(
-        f"""
-        <div style="{step_style}">
-          <div style="{num_style}">3</div>
-          <div style="font-weight:600; color:#0D1B2A; margin-bottom:6px;">Stay ahead</div>
-          <div style="color:#5B6B85; font-size:0.9rem; line-height:1.55;">
-            Open <b>Dashboard</b> to see what's expiring. The daily reminder email goes
-            out automatically — configure the recipient in <b>Settings</b>.
-          </div>
-        </div>
-        """,
+        _step_card(
+            "3", "Stay ahead",
+            "Open the <b>Dashboard</b> to see what's expiring. The daily reminder email goes out automatically — configure the recipient in <b>Settings</b>."
+        ),
         unsafe_allow_html=True,
     )
 

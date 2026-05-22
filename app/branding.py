@@ -22,41 +22,81 @@ BRAND_CSS = """
   /* Tighten default padding so content has more breathing room */
   .block-container {padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1280px;}
 
-  /* Brand header bar */
-  .brand-header {
-    display: flex; align-items: center; gap: 16px;
-    padding: 18px 24px; margin: -1.5rem -1rem 1.5rem -1rem;
-    background: linear-gradient(135deg, #0E5FFF 0%, #0A3FB5 100%);
-    border-radius: 0 0 18px 18px;
-    color: white;
-    box-shadow: 0 4px 18px rgba(14,95,255,0.18);
-  }
-  .brand-header h1 {color: white; margin: 0; font-size: 1.5rem; letter-spacing: -0.01em;}
-  .brand-header .tagline {opacity: 0.85; font-size: 0.9rem; margin-top: 2px;}
+  /* App-level surface */
+  [data-testid="stAppViewContainer"] {background: #FAFBFC;}
 
-  /* KPI tile */
-  .kpi-grid {display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;}
+  /* Brand header — modern SaaS: light surface, eyebrow accent, no gradient slab */
+  .brand-header {
+    padding: 22px 4px 18px 4px;
+    margin: 0 0 22px 0;
+    border-bottom: 1px solid #ECEEF2;
+    background: transparent;
+    position: relative;
+  }
+  .brand-header .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #F4845F; margin-bottom: 8px;
+  }
+  .brand-header .eyebrow::before {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    background: #F4845F; border-radius: 50%;
+  }
+  .brand-header h1 {
+    color: #0F172A; margin: 0;
+    font-size: 1.65rem; font-weight: 700; letter-spacing: -0.022em;
+  }
+  .brand-header .tagline {color: #64748B; font-size: 0.95rem; margin-top: 6px; font-weight: 400;}
+
+  /* KPI tiles — modern, spacious, hover lift */
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 28px;
+  }
   .kpi-tile {
     background: white;
-    border: 1px solid #E5E9F2;
+    border: 1px solid #ECEEF2;
     border-radius: 14px;
-    padding: 18px 20px;
-    box-shadow: 0 1px 3px rgba(13,27,42,0.04);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    padding: 18px 20px 16px 20px;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s, border-color 0.18s;
+    position: relative; overflow: hidden;
   }
-  .kpi-tile:hover {transform: translateY(-2px); box-shadow: 0 6px 18px rgba(13,27,42,0.08);}
-  .kpi-tile .label {color: #5B6B85; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;}
-  .kpi-tile .value {font-size: 2.25rem; font-weight: 700; line-height: 1.1; margin-top: 6px; color: #0D1B2A;}
-  .kpi-tile .sub {color: #8896AA; font-size: 0.82rem; margin-top: 4px;}
+  .kpi-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.10);
+    border-color: #D8DCE3;
+  }
+  .kpi-tile .kpi-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .kpi-tile .label {
+    color: #64748B; font-size: 0.74rem; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .kpi-tile .value {
+    font-size: 2.4rem; font-weight: 700;
+    line-height: 1; color: #0F172A;
+    letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  }
+  .kpi-tile .sub {
+    color: #94A3B8; font-size: 0.8rem;
+    margin-top: 8px; font-weight: 500;
+  }
 
-  .kpi-tile.expired {border-left: 4px solid #E63946;}
-  .kpi-tile.expired .value {color: #E63946;}
-  .kpi-tile.week {border-left: 4px solid #F4845F;}
-  .kpi-tile.week .value {color: #F4845F;}
-  .kpi-tile.month {border-left: 4px solid #F4C24F;}
-  .kpi-tile.month .value {color: #C99100;}
-  .kpi-tile.quarter {border-left: 4px solid #6BBF59;}
-  .kpi-tile.quarter .value {color: #4A9F40;}
+  .kpi-tile [class^="dot-"] {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  }
+  .kpi-tile .dot-expired {background: #DC2626; box-shadow: 0 0 0 4px rgba(220,38,38,0.12);}
+  .kpi-tile .dot-week {background: #EA580C; box-shadow: 0 0 0 4px rgba(234,88,12,0.12);}
+  .kpi-tile .dot-month {background: #D97706; box-shadow: 0 0 0 4px rgba(217,119,6,0.12);}
+  .kpi-tile .dot-quarter {background: #16A34A; box-shadow: 0 0 0 4px rgba(22,163,74,0.12);}
+
+  .kpi-tile.expired .value {color: #DC2626;}
+  .kpi-tile.week .value {color: #EA580C;}
+  .kpi-tile.month .value {color: #D97706;}
+  .kpi-tile.quarter .value {color: #16A34A;}
 
   /* ===== Login experience ===== */
   /* Atmospheric background applied to the whole app on login page */
@@ -204,9 +244,124 @@ BRAND_CSS = """
   /* Dataframe + tables look cleaner */
   [data-testid="stDataFrame"] {border-radius: 10px; overflow: hidden;}
 
-  /* Sidebar branding */
-  [data-testid="stSidebar"] {background: #F4F6FA; border-right: 1px solid #E5E9F2;}
-  [data-testid="stSidebar"] h1 {font-size: 1.05rem; color: #0D1B2A;}
+  /* Sidebar — modern SaaS feel */
+  [data-testid="stSidebar"] {
+    background: #FFFFFF !important;
+    border-right: 1px solid #ECEEF2;
+  }
+  [data-testid="stSidebar"] > div:first-child {padding-top: 16px;}
+  [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h3 {
+    font-size: 0.95rem; color: #0F172A; font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  /* Sidebar nav links — make Streamlit's auto-generated page list less utilitarian */
+  [data-testid="stSidebarNav"] {padding-top: 4px;}
+  [data-testid="stSidebarNav"] a {
+    border-radius: 8px !important;
+    margin: 2px 6px !important;
+    padding: 8px 12px !important;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  [data-testid="stSidebarNav"] a:hover {background: #F1F5F9 !important;}
+  [data-testid="stSidebarNav"] a span {color: #475569 !important; font-weight: 500;}
+  [data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: linear-gradient(90deg, rgba(244,132,95,0.10), transparent) !important;
+    border-left: 3px solid #F4845F !important;
+    padding-left: 9px !important;
+  }
+  [data-testid="stSidebarNav"] a[aria-current="page"] span {color: #0F172A !important; font-weight: 600;}
+
+  /* Tables — cleaner, less hospital-form */
+  [data-testid="stDataFrame"] {
+    border-radius: 12px !important;
+    border: 1px solid #ECEEF2 !important;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  }
+
+  /* Buttons (non-login) — neutral by default with brand accent on primary */
+  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button {
+    background: white; color: #0F172A;
+    border: 1px solid #E2E8F0; border-radius: 8px;
+    padding: 0.5rem 1.1rem; font-weight: 500; font-size: 0.9rem;
+    transition: background 0.12s, border-color 0.12s, transform 0.05s;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  }
+  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button:hover {
+    background: #F8FAFC; border-color: #CBD5E1;
+  }
+  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #F4845F 0%, #E5663C 100%); color: white; border: none;
+    box-shadow: 0 4px 12px rgba(244,132,95,0.28);
+  }
+
+  /* Colour legend bar (Matrix page) */
+  .legend-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    padding: 10px 16px; margin-bottom: 18px;
+    background: white; border: 1px solid #ECEEF2; border-radius: 12px;
+    font-size: 0.82rem; color: #475569;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  }
+  .legend-key {
+    font-weight: 700; color: #94A3B8; letter-spacing: 0.08em;
+    text-transform: uppercase; font-size: 0.7rem; margin-right: 4px;
+  }
+  .legend-chip {display: inline-flex; align-items: center; gap: 6px;}
+  .legend-swatch {width: 12px; height: 12px; border-radius: 3px; display: inline-block;}
+
+  /* Help box — page-level guidance */
+  .help-box {
+    background: linear-gradient(180deg, #FFFAF3 0%, #FFF1DF 100%);
+    border: 1px solid #FFD9B8;
+    border-left: 3px solid #F4845F;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+  }
+  .help-box .help-title {font-weight: 600; color: #0F172A; margin-bottom: 4px; font-size: 0.95rem;}
+  .help-box .help-body {color: #64748B; font-size: 0.88rem; line-height: 1.6;}
+
+  /* Step cards (welcome page how-to) */
+  .step-card {
+    background: white; border: 1px solid #ECEEF2; border-radius: 14px;
+    padding: 22px 22px 20px 22px; height: 100%;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  }
+  .step-card:hover {transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(15,23,42,0.12);}
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, #FFE2C6 0%, #FFCFA1 100%);
+    color: #B54A1F; font-weight: 700; font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  .step-title {font-weight: 600; color: #0F172A; margin-bottom: 6px; font-size: 1rem;}
+  .step-body {color: #64748B; font-size: 0.9rem; line-height: 1.6;}
+
+  /* Hero info card on welcome page */
+  .hero-card {
+    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    padding: 24px 28px; margin-bottom: 22px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #F4845F 0%, #FFB74D 50%, #F4845F 100%);
+  }
+  .hero-card .hero-title {font-size: 1.05rem; font-weight: 600; color: #0F172A; margin-bottom: 6px;}
+  .hero-card .hero-body {color: #475569; line-height: 1.65; font-size: 0.94rem;}
+
+  /* Expanders — sleeker */
+  [data-testid="stExpander"] {
+    border: 1px solid #ECEEF2 !important; border-radius: 12px !important;
+    background: white; box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    margin-bottom: 10px;
+  }
+  [data-testid="stExpander"] summary {padding: 14px 18px !important;}
+  [data-testid="stExpander"] summary:hover {background: #F8FAFC;}
 
   /* ===== Responsive: tablet ===== */
   @media (max-width: 900px) {
@@ -325,91 +480,55 @@ def loading_overlay() -> None:
     )
 
 
-def page_header(title: str, tagline: str = "") -> None:
+def page_header(title: str, tagline: str = "", eyebrow: str = "Beacon Risk") -> None:
+    eyebrow_html = f'<div class="eyebrow">{eyebrow}</div>' if eyebrow else ""
+    tagline_html = f'<div class="tagline">{tagline}</div>' if tagline else ""
     st.markdown(
-        f"""
-        <div class="brand-header">
-          <div style="flex:1;">
-            <h1>{title}</h1>
-            {f'<div class="tagline">{tagline}</div>' if tagline else ''}
-          </div>
-        </div>
-        """,
+        f'<div class="brand-header">{eyebrow_html}<h1>{title}</h1>{tagline_html}</div>',
         unsafe_allow_html=True,
     )
 
 
 def help_box(title: str, body: str) -> None:
-    """Soft info card explaining what a page does."""
+    """Soft info card explaining what a page does. Single-line HTML for parser safety."""
     st.markdown(
-        f"""
-        <div style="
-          background: linear-gradient(180deg, #FFF8F0 0%, #FFF3E4 100%);
-          border: 1px solid #FFD9B8;
-          border-left: 4px solid #F4845F;
-          border-radius: 12px;
-          padding: 14px 18px;
-          margin-bottom: 20px;
-        ">
-          <div style="font-weight: 600; color: #0D1B2A; margin-bottom: 4px; font-size: 0.95rem;">
-            {title}
-          </div>
-          <div style="color: #5B6B85; font-size: 0.88rem; line-height: 1.55;">
-            {body}
-          </div>
-        </div>
-        """,
+        '<div class="help-box">'
+        f'<div class="help-title">{title}</div>'
+        f'<div class="help-body">{body}</div>'
+        '</div>',
         unsafe_allow_html=True,
     )
 
 
 def colour_legend() -> None:
     """Inline legend explaining the matrix traffic-light colours."""
+    items = [
+        ("#e57373", "Expired / ≤7 days"),
+        ("#ffb74d", "≤30 days"),
+        ("#fff176", "≤90 days"),
+        ("#a5d6a7", "In date (&gt;90 days)"),
+        ("#cfd8dc", "Lifetime (no expiry)"),
+    ]
+    chips = "".join(
+        f'<span class="legend-chip"><span class="legend-swatch" style="background:{c};"></span>{label}</span>'
+        for c, label in items
+    )
     st.markdown(
-        """
-        <div style="
-          display: flex; flex-wrap: wrap; gap: 14px;
-          padding: 12px 16px; margin-bottom: 18px;
-          background: white; border: 1px solid #E5E9F2; border-radius: 12px;
-          font-size: 0.82rem; align-items: center;
-        ">
-          <div style="font-weight: 600; color: #5B6B85; margin-right: 6px;">KEY</div>
-          <span style="display:inline-flex; align-items:center; gap:6px;">
-            <span style="width:14px; height:14px; background:#e57373; border-radius:3px;"></span>
-            Expired / ≤7 days
-          </span>
-          <span style="display:inline-flex; align-items:center; gap:6px;">
-            <span style="width:14px; height:14px; background:#ffb74d; border-radius:3px;"></span>
-            ≤30 days
-          </span>
-          <span style="display:inline-flex; align-items:center; gap:6px;">
-            <span style="width:14px; height:14px; background:#fff176; border-radius:3px;"></span>
-            ≤90 days
-          </span>
-          <span style="display:inline-flex; align-items:center; gap:6px;">
-            <span style="width:14px; height:14px; background:#a5d6a7; border-radius:3px;"></span>
-            In date (&gt;90 days)
-          </span>
-          <span style="display:inline-flex; align-items:center; gap:6px;">
-            <span style="width:14px; height:14px; background:#cfd8dc; border-radius:3px;"></span>
-            Lifetime (no expiry)
-          </span>
-        </div>
-        """,
+        '<div class="legend-bar"><span class="legend-key">KEY</span>' + chips + '</div>',
         unsafe_allow_html=True,
     )
 
 
 def kpi_row(items: list[dict]) -> None:
-    """items: [{label, value, sub, tone}] — tone in (expired|week|month|quarter)."""
-    tiles = "".join(
-        f"""
-        <div class="kpi-tile {it.get('tone','')}">
-          <div class="label">{it['label']}</div>
-          <div class="value">{it['value']}</div>
-          <div class="sub">{it.get('sub','')}</div>
-        </div>
-        """
+    """items: [{label, value, sub, tone}] — tone in (expired|week|month|quarter).
+    Single-line HTML to avoid Streamlit's markdown parser closing the block early."""
+    tiles_html = "".join(
+        f'<div class="kpi-tile {it.get("tone", "")}">'
+        f'<div class="kpi-meta"><span class="label">{it["label"]}</span>'
+        f'<span class="dot-{it.get("tone", "")}"></span></div>'
+        f'<div class="value">{it["value"]}</div>'
+        f'<div class="sub">{it.get("sub", "")}</div>'
+        f'</div>'
         for it in items
     )
-    st.markdown(f'<div class="kpi-grid">{tiles}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-grid">{tiles_html}</div>', unsafe_allow_html=True)
