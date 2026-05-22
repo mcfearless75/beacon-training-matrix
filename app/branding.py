@@ -253,6 +253,78 @@ def inject_css() -> None:
     st.markdown(BRAND_CSS, unsafe_allow_html=True)
 
 
+def loading_overlay() -> None:
+    """Full-screen pulsing-logo splash that auto-fades out on first render."""
+    if not LOGO_PATH.exists():
+        return
+    import base64
+
+    b64 = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+    st.markdown(
+        f"""
+        <style>
+          @keyframes beacon-fade-out {{
+            0%, 70% {{opacity: 1; visibility: visible;}}
+            100% {{opacity: 0; visibility: hidden;}}
+          }}
+          @keyframes beacon-pulse {{
+            0%, 100% {{
+              transform: scale(1);
+              box-shadow: 0 0 0 0 rgba(244,132,95,0.55), 0 0 60px 20px rgba(244,132,95,0.25);
+            }}
+            50% {{
+              transform: scale(1.05);
+              box-shadow: 0 0 0 30px rgba(244,132,95,0), 0 0 80px 30px rgba(244,132,95,0.45);
+            }}
+          }}
+          @keyframes beacon-shimmer {{
+            0% {{background-position: -200% 0;}}
+            100% {{background-position: 200% 0;}}
+          }}
+          .beacon-splash {{
+            position: fixed; inset: 0; z-index: 999999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background:
+              radial-gradient(800px 500px at 80% 10%, rgba(244,132,95,0.22), transparent 60%),
+              radial-gradient(700px 500px at 10% 90%, rgba(14,95,255,0.10), transparent 60%),
+              linear-gradient(180deg, #FFFBF6 0%, #F7F4EF 100%);
+            animation: beacon-fade-out 1.6s ease-in-out forwards;
+            pointer-events: none;
+          }}
+          .beacon-splash .ring {{
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFE2C6 100%);
+            border: 1px solid #FFD3AC;
+            border-radius: 999px;
+            padding: 26px 52px;
+            animation: beacon-pulse 1.4s ease-in-out infinite;
+          }}
+          .beacon-splash .ring img {{height: 72px; width: auto; display: block;}}
+          .beacon-splash .label {{
+            margin-top: 28px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: transparent;
+            background: linear-gradient(90deg, #8C7B66 0%, #F4845F 50%, #8C7B66 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: beacon-shimmer 1.8s linear infinite;
+          }}
+        </style>
+        <div class="beacon-splash">
+          <div class="ring"><img src="data:image/png;base64,{b64}" alt="Beacon Risk"/></div>
+          <div class="label">Loading your dashboard</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def page_header(title: str, tagline: str = "") -> None:
     st.markdown(
         f"""

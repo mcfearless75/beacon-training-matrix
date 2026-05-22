@@ -1,7 +1,7 @@
 import streamlit as st
 
 from app.auth import current_user_role, require_auth
-from app.branding import LOGO_PATH, inject_css, page_header
+from app.branding import LOGO_PATH, inject_css, loading_overlay, page_header
 
 st.set_page_config(
     page_title="Beacon Training Matrix",
@@ -11,6 +11,7 @@ st.set_page_config(
 )
 require_auth()
 inject_css()
+loading_overlay()
 
 with st.sidebar:
     if LOGO_PATH.exists():
