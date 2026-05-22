@@ -6,3 +6,8 @@ __pycache__/
 .streamlit/secrets.toml
 *.xlsx
 !Training Matrix.xlsx
+.claude/
+.claude-flow/
+docs/
+*.egg-info/
+.coverage
