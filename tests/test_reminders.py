@@ -70,3 +70,53 @@ def test_build_digest_groups_by_window_and_skips_empty():
 
 def test_build_digest_empty_returns_none():
     assert build_digest([], app_url="x") is None
+
+
+def test_run_reminders_skips_when_no_recipient(monkeypatch):
+    from cron import run_reminders as rr
+
+    monkeypatch.setattr(rr, "load_config", lambda: type("C", (), {"app_base_url": "x", "resend_api_key": "k", "sender_email": "s@x"})())
+    monkeypatch.setattr(rr, "service_client", lambda: object())
+    monkeypatch.setattr(rr, "fetch_settings", lambda sb: {"reminder_recipient_email": None})
+
+    result = rr.run()
+    assert result == {"sent_count": 0, "skipped": "no_recipient"}
+
+
+def test_run_reminders_sends_digest_and_logs(monkeypatch):
+    from cron import run_reminders as rr
+
+    sent_payloads = []
+    logged = []
+
+    monkeypatch.setattr(rr, "load_config", lambda: type("C", (), {"app_base_url": "http://x", "resend_api_key": "k", "sender_email": "s@x"})())
+    monkeypatch.setattr(rr, "service_client", lambda: "SB")
+    monkeypatch.setattr(rr, "fetch_settings", lambda sb: {
+        "reminder_recipient_email": "admin@beacon.test",
+        "sender_email": "noreply@beacon.test",
+        "sender_name": "Beacon",
+    })
+    monkeypatch.setattr(rr, "fetch_records", lambda sb: [
+        {"id": "r1", "expiry_date": date(2026, 5, 29), "person_name": "Alice", "training_name": "First Aid"},
+    ])
+    monkeypatch.setattr(rr, "fetch_already_sent", lambda sb: set())
+    monkeypatch.setattr(rr, "send_email", lambda **kw: sent_payloads.append(kw) or "msg_1")
+    monkeypatch.setattr(rr, "log_send", lambda sb, item, recipient, status, msg_id=None, error=None: logged.append((item["id"], status)))
+
+    # Freeze today
+    import cron.run_reminders as mod
+    real_date = mod.date
+
+    class FakeDate(real_date):
+        @classmethod
+        def today(cls):
+            return real_date(2026, 5, 22)
+
+    monkeypatch.setattr(mod, "date", FakeDate)
+
+    result = rr.run()
+    assert result["sent_count"] == 1
+    assert result["message_id"] == "msg_1"
+    assert len(sent_payloads) == 1
+    assert sent_payloads[0]["to"] == "admin@beacon.test"
+    assert logged == [("r1", "sent")]
