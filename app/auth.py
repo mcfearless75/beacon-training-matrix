@@ -1,6 +1,7 @@
 import base64
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from app.branding import LOGO_PATH, inject_css
 from beacon.config import load_config
@@ -31,6 +32,19 @@ def _friendly_otp_error(e: Exception) -> str:
 def login_screen():
     load_config()  # validates env at startup; no callback redirect needed for OTP flow
     inject_css()
+
+    # Tag the body so login-only styles activate (atmospheric bg, card layout)
+    components.html(
+        """
+        <script>
+          const root = window.parent.document.body;
+          if (root && !root.classList.contains('login-active')) {
+            root.classList.add('login-active');
+          }
+        </script>
+        """,
+        height=0,
+    )
 
     logo_uri = _logo_data_uri()
     logo_html = (
@@ -103,8 +117,8 @@ def login_screen():
                 st.error(_friendly_otp_error(e))
 
     st.markdown(
-        '<div style="margin-top:18px; color:#8896AA; font-size:0.8rem; text-align:center;">'
-        'Beacon Risk · Internal training compliance'
+        '<div class="login-footer">'
+        'Beacon Risk <span class="dot">•</span> Health & Safety Consultants'
         '</div>',
         unsafe_allow_html=True,
     )
