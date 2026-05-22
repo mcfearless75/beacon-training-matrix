@@ -78,11 +78,26 @@ def login_screen():
     )
     if st.button("Send magic link", use_container_width=True) and email:
         sb = anon_client()
-        sb.auth.sign_in_with_otp({
-            "email": email,
-            "options": {"email_redirect_to": cfg.app_base_url},
-        })
-        st.success("Check your inbox — the sign-in link expires in 60 minutes.")
+        try:
+            sb.auth.sign_in_with_otp({
+                "email": email,
+                "options": {"email_redirect_to": cfg.app_base_url},
+            })
+            st.success("Check your inbox — the sign-in link expires in 60 minutes.")
+        except Exception as e:
+            msg = str(e).lower()
+            if "rate limit" in msg:
+                st.warning(
+                    "You've requested too many sign-in emails recently. "
+                    "Please wait ~30 minutes before trying again."
+                )
+            elif "not allowed" in msg or "redirect" in msg:
+                st.error(
+                    "Sign-in is misconfigured. Ask an admin to add this URL to "
+                    "Supabase's allowed redirect list."
+                )
+            else:
+                st.error(f"Sign-in failed: {e}")
 
     st.markdown(
         '<div style="margin-top:18px; color:#8896AA; font-size:0.8rem; text-align:center;">'
