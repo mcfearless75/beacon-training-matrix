@@ -1,12 +1,18 @@
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import inject_css, page_header
+from app.branding import help_box, inject_css, page_header
 from beacon.db import anon_client
 
 require_auth()
 inject_css()
 page_header("People", "Add, edit, and manage workforce records.")
+help_box(
+    "Managing people",
+    "Add new starters with the form below, or click any name to expand and edit. "
+    "Set someone to <b>inactive</b> when they leave — they'll be hidden from the Matrix "
+    "and Dashboard but their history is preserved.",
+)
 sb = anon_client()
 
 with st.expander("Add new person"):
@@ -27,6 +33,9 @@ with st.expander("Add new person"):
         st.rerun()
 
 people = sb.table("people").select("*").order("name").execute().data
+active_count = sum(1 for p in people if p.get("active"))
+st.caption(f"**{active_count} active** · {len(people)} total")
+
 for p in people:
     with st.expander(f"{p['name']} {'(inactive)' if not p['active'] else ''}"):
         new_title = st.text_input("Job title", value=p.get("job_title") or "", key=f"jt_{p['id']}")

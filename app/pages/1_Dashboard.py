@@ -4,13 +4,19 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import inject_css, kpi_row, page_header
+from app.branding import help_box, inject_css, kpi_row, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
 require_auth()
 inject_css()
 page_header("Dashboard", "Live training-expiry view across all active people and training types.")
+help_box(
+    "What you're looking at",
+    "Counts of training records grouped by how close they are to expiring. "
+    "Click any column header in the table below to sort. The same data drives the "
+    "daily reminder email — anything in the red, orange, or yellow tiles is in the next digest.",
+)
 
 sb = anon_client()
 records = sb.rpc("get_active_training_records").execute().data or []

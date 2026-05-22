@@ -339,6 +339,67 @@ def page_header(title: str, tagline: str = "") -> None:
     )
 
 
+def help_box(title: str, body: str) -> None:
+    """Soft info card explaining what a page does."""
+    st.markdown(
+        f"""
+        <div style="
+          background: linear-gradient(180deg, #FFF8F0 0%, #FFF3E4 100%);
+          border: 1px solid #FFD9B8;
+          border-left: 4px solid #F4845F;
+          border-radius: 12px;
+          padding: 14px 18px;
+          margin-bottom: 20px;
+        ">
+          <div style="font-weight: 600; color: #0D1B2A; margin-bottom: 4px; font-size: 0.95rem;">
+            {title}
+          </div>
+          <div style="color: #5B6B85; font-size: 0.88rem; line-height: 1.55;">
+            {body}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def colour_legend() -> None:
+    """Inline legend explaining the matrix traffic-light colours."""
+    st.markdown(
+        """
+        <div style="
+          display: flex; flex-wrap: wrap; gap: 14px;
+          padding: 12px 16px; margin-bottom: 18px;
+          background: white; border: 1px solid #E5E9F2; border-radius: 12px;
+          font-size: 0.82rem; align-items: center;
+        ">
+          <div style="font-weight: 600; color: #5B6B85; margin-right: 6px;">KEY</div>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; background:#e57373; border-radius:3px;"></span>
+            Expired / ≤7 days
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; background:#ffb74d; border-radius:3px;"></span>
+            ≤30 days
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; background:#fff176; border-radius:3px;"></span>
+            ≤90 days
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; background:#a5d6a7; border-radius:3px;"></span>
+            In date (&gt;90 days)
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <span style="width:14px; height:14px; background:#cfd8dc; border-radius:3px;"></span>
+            Lifetime (no expiry)
+          </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def kpi_row(items: list[dict]) -> None:
     """items: [{label, value, sub, tone}] — tone in (expired|week|month|quarter)."""
     tiles = "".join(

@@ -4,13 +4,20 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import inject_css, page_header
+from app.branding import colour_legend, help_box, inject_css, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
 require_auth()
 inject_css()
 page_header("Training Matrix", "Every person, every training type — coloured by time-to-expiry.")
+help_box(
+    "How to read this",
+    "Each cell shows when a person's training expires. Cell colour shows urgency "
+    "(see key below). Use the form under the table to add or update a record — "
+    "pick a person, pick a training type, set the dates, hit Save.",
+)
+colour_legend()
 
 sb = anon_client()
 people = sb.table("people").select("id, name").eq("active", True).order("name").execute().data

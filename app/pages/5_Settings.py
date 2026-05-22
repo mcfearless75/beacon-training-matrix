@@ -3,13 +3,19 @@ import tempfile
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import inject_css, page_header
+from app.branding import help_box, inject_css, page_header
 from beacon.db import anon_client, service_client
 from beacon.importer import parse_matrix_workbook
 
 require_admin()
 inject_css()
 page_header("Settings", "Reminder recipient, sender details, and bulk import.")
+help_box(
+    "Two things to configure",
+    "<b>Reminder email</b> — who gets the daily expiry digest, and which address it's sent from. "
+    "<b>Import</b> — if you have an existing training matrix spreadsheet, upload it here to "
+    "bulk-load people and training types in one go.",
+)
 sb = anon_client()
 
 settings = sb.table("settings").select("*").eq("id", 1).single().execute().data or {}

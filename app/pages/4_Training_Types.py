@@ -1,12 +1,18 @@
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import inject_css, page_header
+from app.branding import help_box, inject_css, page_header
 from beacon.db import anon_client
 
 require_admin()
 inject_css()
 page_header("Training Types", "The catalogue of qualifications and certifications tracked.")
+help_box(
+    "What goes here",
+    "List every kind of training, ticket, or certificate you track for your workforce. "
+    "Examples: CSCS, First Aid at Work, IPAF, Manual Handling, Company Induction. "
+    "These become the columns of the Matrix.",
+)
 sb = anon_client()
 
 with st.expander("Add new training type"):
