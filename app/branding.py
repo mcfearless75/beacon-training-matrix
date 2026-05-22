@@ -53,14 +53,26 @@ BRAND_CSS = """
 
   /* Login card */
   .login-shell {
-    max-width: 440px; margin: 8vh auto 0 auto;
-    background: white; border-radius: 18px;
+    max-width: 460px; margin: 6vh auto 0 auto;
+    background: white; border-radius: 20px;
     border: 1px solid #E5E9F2;
-    padding: 40px 36px;
-    box-shadow: 0 12px 40px rgba(13,27,42,0.08);
+    padding: 44px 40px 36px 40px;
+    box-shadow: 0 14px 50px rgba(13,27,42,0.10);
+    text-align: center;
   }
-  .login-shell h1 {font-size: 1.7rem; margin-bottom: 4px; color: #0D1B2A;}
-  .login-shell .login-tag {color: #5B6B85; margin-bottom: 28px; font-size: 0.95rem;}
+  .login-logo-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #FFF8F0 0%, #FFE9D6 100%);
+    border: 1px solid #FFD9B8;
+    border-radius: 999px;
+    padding: 18px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 14px rgba(244,132,95,0.18);
+  }
+  .login-logo-pill img {height: 56px; width: auto; display: block;}
+  .login-shell h1 {font-size: 1.75rem; margin-bottom: 6px; color: #0D1B2A; text-align: center;}
+  .login-shell .login-tag {color: #5B6B85; margin-bottom: 28px; font-size: 0.95rem; text-align: center;}
+  .login-shell .stTextInput input {text-align: center;}
 
   /* Buttons */
   .stButton > button {
