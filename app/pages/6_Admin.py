@@ -7,6 +7,7 @@ from cron.run_reminders import run as run_cron
 
 require_admin()
 st.title("Admin")
+# Service-role client only instantiated after admin gate passes.
 sb = service_client()
 
 st.subheader("Users")

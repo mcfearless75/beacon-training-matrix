@@ -20,8 +20,16 @@ def fetch_records(sb):
     ]
 
 
-def fetch_already_sent(sb) -> set[tuple[str, str]]:
-    rows = sb.table("reminder_log").select("training_record_id, window").eq("status", "sent").execute().data or []
+def fetch_already_sent(sb, today: date) -> set[tuple[str, str]]:
+    rows = (
+        sb.table("reminder_log")
+        .select("training_record_id, window")
+        .eq("status", "sent")
+        .gte("sent_at", today.isoformat())
+        .execute()
+        .data
+        or []
+    )
     return {(r["training_record_id"], r["window"]) for r in rows}
 
 
@@ -30,13 +38,16 @@ def fetch_settings(sb) -> dict:
 
 
 def log_send(sb, item, recipient, status, msg_id=None, error=None):
-    sb.table("reminder_log").insert({
-        "training_record_id": item["id"],
-        "window": item["window"],
-        "recipient_email": recipient,
-        "status": status,
-        "error": error,
-    }).execute()
+    sb.table("reminder_log").upsert(
+        {
+            "training_record_id": item["id"],
+            "window": item["window"],
+            "recipient_email": recipient,
+            "status": status,
+            "error": (error[:500] if error else None),
+        },
+        on_conflict="training_record_id,window",
+    ).execute()
 
 
 def run() -> dict:
@@ -48,9 +59,10 @@ def run() -> dict:
         print("[reminders] No recipient configured. Skipping.")
         return {"sent_count": 0, "skipped": "no_recipient"}
 
+    today = date.today()
     records = fetch_records(sb)
-    already_sent = fetch_already_sent(sb)
-    due = find_due_items(records, already_sent=already_sent, today=date.today())
+    already_sent = fetch_already_sent(sb, today=today)
+    due = find_due_items(records, already_sent=already_sent, today=today)
 
     digest = build_digest(due, app_url=cfg.app_base_url)
     if digest is None:

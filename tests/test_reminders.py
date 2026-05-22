@@ -99,7 +99,7 @@ def test_run_reminders_sends_digest_and_logs(monkeypatch):
     monkeypatch.setattr(rr, "fetch_records", lambda sb: [
         {"id": "r1", "expiry_date": date(2026, 5, 29), "person_name": "Alice", "training_name": "First Aid"},
     ])
-    monkeypatch.setattr(rr, "fetch_already_sent", lambda sb: set())
+    monkeypatch.setattr(rr, "fetch_already_sent", lambda sb, today: set())
     monkeypatch.setattr(rr, "send_email", lambda **kw: sent_payloads.append(kw) or "msg_1")
     monkeypatch.setattr(rr, "log_send", lambda sb, item, recipient, status, msg_id=None, error=None: logged.append((item["id"], status)))
 

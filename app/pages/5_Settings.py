@@ -1,5 +1,4 @@
 import tempfile
-from pathlib import Path
 
 import streamlit as st
 
@@ -34,11 +33,11 @@ start_col = st.text_input("Start date column letter", value="I")
 training_start_col = st.text_input("First training-type column letter", value="J")
 
 if uploaded and st.button("Import"):
-    tmp_path = Path(tempfile.gettempdir()) / uploaded.name
-    with open(tmp_path, "wb") as f:
-        f.write(uploaded.read())
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+        tmp.write(uploaded.read())
+        tmp_path = tmp.name
     parsed = parse_matrix_workbook(
-        str(tmp_path),
+        tmp_path,
         header_row=int(header_row),
         name_col=name_col,
         job_col=job_col,
