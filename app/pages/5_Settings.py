@@ -3,11 +3,13 @@ import tempfile
 import streamlit as st
 
 from app.auth import require_admin
+from app.branding import inject_css, page_header
 from beacon.db import anon_client, service_client
 from beacon.importer import parse_matrix_workbook
 
 require_admin()
-st.title("Settings")
+inject_css()
+page_header("Settings", "Reminder recipient, sender details, and bulk import.")
 sb = anon_client()
 
 settings = sb.table("settings").select("*").eq("id", 1).single().execute().data or {}

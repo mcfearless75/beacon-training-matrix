@@ -1,10 +1,12 @@
 import streamlit as st
 
 from app.auth import require_auth
+from app.branding import inject_css, page_header
 from beacon.db import anon_client
 
 require_auth()
-st.title("People")
+inject_css()
+page_header("People", "Add, edit, and manage workforce records.")
 sb = anon_client()
 
 with st.expander("Add new person"):

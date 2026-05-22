@@ -4,11 +4,13 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
+from app.branding import inject_css, kpi_row, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
 require_auth()
-st.title("Dashboard")
+inject_css()
+page_header("Dashboard", "Live training-expiry view across all active people and training types.")
 
 sb = anon_client()
 records = sb.rpc("get_active_training_records").execute().data or []
@@ -25,19 +27,36 @@ for r in records:
         "Person": r["person_name"],
         "Training": r["training_name"],
         "Expires": exp,
-        "Window": {"expired": "Expired", "7": "≤7 days", "30": "≤30 days", "90": "≤90 days"}[window],
+        "Window": {"expired": "Expired", "7": "≤ 7 days", "30": "≤ 30 days", "90": "≤ 90 days"}[window],
         "_w": window,
     })
 
 df = pd.DataFrame(rows)
 
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Expired", (df["_w"] == "expired").sum() if not df.empty else 0)
-c2.metric("≤ 7 days", (df["_w"] == "7").sum() if not df.empty else 0)
-c3.metric("≤ 30 days", (df["_w"] == "30").sum() if not df.empty else 0)
-c4.metric("≤ 90 days", (df["_w"] == "90").sum() if not df.empty else 0)
+
+def n(w: str) -> int:
+    return int((df["_w"] == w).sum()) if not df.empty else 0
+
+
+total = len(df)
+kpi_row([
+    {"label": "Expired", "value": n("expired"), "sub": "Overdue — action required", "tone": "expired"},
+    {"label": "≤ 7 days", "value": n("7"), "sub": "Renew this week", "tone": "week"},
+    {"label": "≤ 30 days", "value": n("30"), "sub": "Plan renewal", "tone": "month"},
+    {"label": "≤ 90 days", "value": n("90"), "sub": "On the horizon", "tone": "quarter"},
+])
 
 if df.empty:
-    st.info("Nothing expiring in the next 90 days.")
+    st.success("Everything is in date for the next 90 days. Nothing to action.")
 else:
-    st.dataframe(df.drop(columns=["_w"]).sort_values("Expires"), use_container_width=True)
+    st.markdown(f"#### {total} record{'s' if total != 1 else ''} need attention")
+    display = df.drop(columns=["_w"]).sort_values("Expires").reset_index(drop=True)
+    st.dataframe(
+        display,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Expires": st.column_config.DateColumn("Expires", format="DD MMM YYYY"),
+            "Window": st.column_config.TextColumn("Status"),
+        },
+    )

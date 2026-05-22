@@ -2,11 +2,13 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_admin
+from app.branding import inject_css, page_header
 from beacon.db import service_client
 from cron.run_reminders import run as run_cron
 
 require_admin()
-st.title("Admin")
+inject_css()
+page_header("Admin", "User roles, reminder audit log, and manual cron triggers.")
 # Service-role client only instantiated after admin gate passes.
 sb = service_client()
 

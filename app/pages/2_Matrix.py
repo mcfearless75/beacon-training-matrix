@@ -4,11 +4,13 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
+from app.branding import inject_css, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
 require_auth()
-st.title("Matrix")
+inject_css()
+page_header("Training Matrix", "Every person, every training type — coloured by time-to-expiry.")
 
 sb = anon_client()
 people = sb.table("people").select("id, name").eq("active", True).order("name").execute().data

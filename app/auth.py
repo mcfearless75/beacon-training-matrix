@@ -1,5 +1,6 @@
 import streamlit as st
 
+from app.branding import LOGO_PATH, inject_css
 from beacon.config import load_config
 from beacon.db import anon_client
 
@@ -10,16 +11,31 @@ def get_session():
 
 def login_screen():
     cfg = load_config()
-    st.title("Beacon Training Matrix")
-    st.write("Sign in with a magic link.")
-    email = st.text_input("Email")
-    if st.button("Send magic link") and email:
+    inject_css()
+    st.markdown('<div class="login-shell">', unsafe_allow_html=True)
+    if LOGO_PATH.exists():
+        col_logo, _ = st.columns([1, 3])
+        with col_logo:
+            st.image(str(LOGO_PATH), width=72)
+    st.markdown(
+        '<h1>Beacon Training Matrix</h1>'
+        '<div class="login-tag">Sign in to access your training compliance dashboard.</div>',
+        unsafe_allow_html=True,
+    )
+    email = st.text_input("Work email", placeholder="you@beaconrisk.co.uk", label_visibility="collapsed")
+    if st.button("Send magic link", use_container_width=True) and email:
         sb = anon_client()
         sb.auth.sign_in_with_otp({
             "email": email,
             "options": {"email_redirect_to": cfg.app_base_url},
         })
-        st.success("Check your email for the sign-in link.")
+        st.success("Check your inbox — the sign-in link expires in 60 minutes.")
+    st.markdown(
+        '<div style="margin-top:18px; color:#8896AA; font-size:0.8rem; text-align:center;">'
+        'Beacon Risk · Internal training compliance'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def handle_callback():
