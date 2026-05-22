@@ -1,4 +1,5 @@
 import base64
+import os
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -6,6 +7,10 @@ import streamlit.components.v1 as components
 from app.branding import LOGO_PATH, inject_css
 from beacon.config import load_config
 from beacon.db import anon_client
+
+
+def _auth_enabled() -> bool:
+    return os.getenv("AUTH_ENABLED", "false").lower() in ("1", "true", "yes", "on")
 
 
 def get_session():
@@ -130,6 +135,8 @@ def handle_callback():
 
 
 def current_user_role() -> str | None:
+    if not _auth_enabled():
+        return "admin"  # Demo mode: everyone is admin
     session = get_session()
     if not session:
         return None
@@ -147,6 +154,8 @@ def current_user_role() -> str | None:
 
 
 def require_auth():
+    if not _auth_enabled():
+        return  # Demo mode: no auth gate
     handle_callback()
     if not get_session():
         login_screen()
@@ -154,6 +163,8 @@ def require_auth():
 
 
 def require_admin():
+    if not _auth_enabled():
+        return  # Demo mode: everyone is admin
     require_auth()
     if current_user_role() != "admin":
         st.error("Admin access required.")
