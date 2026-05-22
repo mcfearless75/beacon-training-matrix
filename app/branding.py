@@ -527,6 +527,34 @@ BRAND_CSS = """
 
   /* Make the Matrix/dataframe area horizontally scrollable on small viewports */
   [data-testid="stDataFrame"] {max-width: 100%;}
+
+  /* ===== Matrix HTML table ===== */
+  .matrix-wrap {overflow-x: auto; margin-bottom: 14px; border-radius: 14px; background: white; border: 1px solid #ECEEF2; box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
+  .matrix-table {width: 100%; border-collapse: collapse; font-size: 0.82rem;}
+  .mat-th {background: #F8FAFC; color: #64748B; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid #ECEEF2; white-space: nowrap;}
+  .mat-th-person {min-width: 150px; position: sticky; left: 0; z-index: 2; background: #F8FAFC; border-right: 1px solid #ECEEF2;}
+  .matrix-table tbody tr:hover {background: rgba(248,250,252,0.6);}
+  .mat-td {padding: 8px 14px; border-bottom: 1px solid #F1F5F9; white-space: nowrap; font-size: 0.82rem; font-weight: 500; color: #0F172A;}
+  .mat-td-person {font-weight: 600; min-width: 150px; position: sticky; left: 0; background: white; border-right: 1px solid #ECEEF2; z-index: 1;}
+  .matrix-table tbody tr:hover .mat-td-person {background: #F8FAFC;}
+  .mat-missing {color: #CBD5E1 !important; font-size: 0.8rem !important; font-weight: 400 !important;}
+  .mat-lifetime {color: #64748B !important; background: #F8FAFC !important; font-style: italic;}
+  /* Matrix stats strip */
+  .matrix-stats {display: flex; flex-wrap: wrap; align-items: stretch; margin-bottom: 14px; background: white; border: 1px solid #ECEEF2; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
+  .mstat {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 22px; border-right: 1px solid #ECEEF2; flex: 1; min-width: 80px;}
+  .mstat:last-child {border-right: none;}
+  .mstat-label {font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-bottom: 3px;}
+  .mstat b {font-size: 1.35rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #0F172A;}
+  @media (max-width: 700px) {.mstat {padding: 10px 12px;} .mstat b {font-size: 1.1rem;} .mstat-label {font-size: 0.6rem;} .matrix-stats {gap: 0;}}
+  @media (max-width: 480px) {.mstat {flex: 0 0 50%; border-bottom: 1px solid #ECEEF2;}}
+
+  /* ===== People page person-row label ===== */
+  .person-expander-label {display: flex; align-items: center; gap: 10px;}
+  .compliance-badge {display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap;}
+  .compliance-badge.green {background: #DCFCE7; color: #15803D;}
+  .compliance-badge.amber {background: #FEF3C7; color: #B45309;}
+  .compliance-badge.red {background: #FEE2E2; color: #B91C1C;}
+  .compliance-badge.grey {background: #F1F5F9; color: #64748B;}
 </style>
 """
 
