@@ -1,6 +1,6 @@
 from datetime import date
 
-from beacon.reminders import classify_window, find_due_items
+from beacon.reminders import build_digest, classify_window, find_due_items
 
 
 def test_classify_window_expired_today():
@@ -48,3 +48,25 @@ def test_find_due_items_filters_by_window():
     assert ("r1", "7") not in ids
     assert ("r3", "expired") in ids
     assert all(i[0] != "r2" for i in ids)
+
+
+def test_build_digest_groups_by_window_and_skips_empty():
+    items = [
+        {"id": "r1", "window": "7", "person_name": "Alice", "training_name": "First Aid", "expiry_date": date(2026, 5, 29)},
+        {"id": "r2", "window": "expired", "person_name": "Bob", "training_name": "CSCS", "expiry_date": date(2026, 5, 1)},
+        {"id": "r3", "window": "30", "person_name": "Carol", "training_name": "Manual Handling", "expiry_date": date(2026, 6, 15)},
+    ]
+    result = build_digest(items, app_url="http://localhost:8501")
+    assert result is not None
+    subject, html = result
+    assert "3 items" in subject
+    assert "Expired" in html
+    assert "Bob" in html
+    assert "Alice" in html
+    assert "First Aid" in html
+    assert "29 May 2026" in html
+    assert "90 days" not in html
+
+
+def test_build_digest_empty_returns_none():
+    assert build_digest([], app_url="x") is None
