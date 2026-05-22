@@ -90,6 +90,44 @@ BRAND_CSS = """
   /* Sidebar branding */
   [data-testid="stSidebar"] {background: #F4F6FA; border-right: 1px solid #E5E9F2;}
   [data-testid="stSidebar"] h1 {font-size: 1.05rem; color: #0D1B2A;}
+
+  /* ===== Responsive: tablet ===== */
+  @media (max-width: 900px) {
+    .block-container {padding-left: 0.75rem; padding-right: 0.75rem;}
+    .brand-header {padding: 14px 18px; border-radius: 0 0 14px 14px;}
+    .brand-header h1 {font-size: 1.25rem;}
+    .brand-header .tagline {font-size: 0.82rem;}
+    .kpi-grid {grid-template-columns: repeat(2, 1fr); gap: 10px;}
+    .kpi-tile {padding: 14px 16px;}
+    .kpi-tile .value {font-size: 1.85rem;}
+    .login-shell {margin: 4vh 12px 0 12px; padding: 32px 24px 28px 24px;}
+    .login-logo-pill {padding: 14px 28px;}
+    .login-logo-pill img {height: 44px;}
+    .login-shell h1 {font-size: 1.4rem;}
+  }
+
+  /* ===== Responsive: mobile ===== */
+  @media (max-width: 600px) {
+    .block-container {padding-top: 1rem;}
+    .brand-header {padding: 12px 14px;}
+    .brand-header h1 {font-size: 1.1rem; letter-spacing: 0;}
+    .brand-header .tagline {font-size: 0.75rem;}
+    .kpi-grid {grid-template-columns: 1fr; gap: 8px;}
+    .kpi-tile {padding: 12px 14px;}
+    .kpi-tile .label {font-size: 0.7rem;}
+    .kpi-tile .value {font-size: 1.65rem;}
+    .kpi-tile .sub {font-size: 0.75rem;}
+    .login-shell {margin: 2vh 10px 0 10px; padding: 28px 20px 24px 20px; border-radius: 16px;}
+    .login-logo-pill {padding: 12px 24px;}
+    .login-logo-pill img {height: 38px;}
+    .login-shell h1 {font-size: 1.25rem;}
+    .login-shell .login-tag {font-size: 0.85rem; margin-bottom: 20px;}
+    /* Make dataframes scroll horizontally on mobile rather than squashing */
+    [data-testid="stDataFrame"] > div {overflow-x: auto;}
+  }
+
+  /* Make the Matrix/dataframe area horizontally scrollable on small viewports */
+  [data-testid="stDataFrame"] {max-width: 100%;}
 </style>
 """
 

@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="Beacon Training Matrix",
     page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🎓",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 require_auth()
 inject_css()
