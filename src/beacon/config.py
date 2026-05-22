@@ -33,7 +33,12 @@ class Config:
 def load_config() -> Config:
     missing = [k for k in REQUIRED if not os.getenv(k)]
     if missing:
-        raise RuntimeError(f"Missing required env vars: {', '.join(missing)}")
+        # Diagnostic: list visible env keys so we can see what the runtime actually has.
+        visible = sorted(k for k in os.environ.keys() if not k.startswith("_"))
+        raise RuntimeError(
+            f"Missing required env vars: {', '.join(missing)}. "
+            f"Visible env keys ({len(visible)}): {', '.join(visible)}"
+        )
     app_base_url = os.environ["APP_BASE_URL"]
     if not (app_base_url.startswith("https://") or app_base_url.startswith("http://localhost")):
         raise RuntimeError("APP_BASE_URL must be https:// (or http://localhost for dev)")
