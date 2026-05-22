@@ -547,6 +547,10 @@ BRAND_CSS = """
   .mstat b {font-size: 1.35rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #0F172A;}
   @media (max-width: 700px) {.mstat {padding: 10px 12px;} .mstat b {font-size: 1.1rem;} .mstat-label {font-size: 0.6rem;} .matrix-stats {gap: 0;}}
   @media (max-width: 480px) {.mstat {flex: 0 0 50%; border-bottom: 1px solid #ECEEF2;}}
+  /* Required-missing cell */
+  .mat-required {background: #FEE2E2 !important; color: #991B1B !important; font-weight: 700 !important; font-size: 0.72rem !important; letter-spacing: 0.04em; text-transform: uppercase;}
+  /* Category group header row */
+  .mat-cat-header {background: #1E293B !important; color: #94A3B8 !important; font-size: 0.64rem !important; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; padding: 6px 8px !important; border-bottom: 2px solid #0F172A !important;}
 
   /* ===== People page person-row label ===== */
   .person-expander-label {display: flex; align-items: center; gap: 10px;}

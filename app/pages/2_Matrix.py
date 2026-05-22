@@ -16,70 +16,60 @@ page_header(
 )
 help_box(
     "How to read this",
-    "Each cell shows when training expires. Cell colour shows urgency. "
-    "Use the filters to narrow the view. Click <b>Edit a record</b> below to add or update one entry. "
-    "Click <b>Bulk update</b> to mark several people complete at once after a training day.",
+    "Each cell shows when training expires. Colour shows urgency. "
+    "<b>Required — Missing</b> (red, bold) means that training is mandatory for that person's role but has no record. "
+    "Use filters to narrow the view. Edit a record below to add or update one entry.",
 )
 colour_legend()
 
 sb = anon_client()
 people = sb.table("people").select("id, name, job_title").eq("active", True).order("name").execute().data
-types = sb.table("training_types").select("id, name").eq("active", True).order("name").execute().data
+types_raw = sb.table("training_types").select("id, name, category").eq("active", True).order("name").execute().data
 records = (
     sb.table("training_records")
     .select("person_id, training_type_id, expiry_date, completed_date, notes")
     .execute()
     .data
 )
+requirements_raw = sb.table("role_requirements").select("job_title, training_type_id").execute().data
+
 rec_by_pair = {(r["person_id"], r["training_type_id"]): r for r in records}
+req_by_role: dict[str, set] = {}
+for r in requirements_raw:
+    req_by_role.setdefault(r["job_title"], set()).add(r["training_type_id"])
 
 # ===== Filter bar =====
 f1, f2, f3 = st.columns([2, 1, 2])
 with f1:
     search = st.text_input(
-        "Search",
-        placeholder="Filter by person name or job title…",
-        label_visibility="collapsed",
+        "Search", placeholder="Filter by name or job title…", label_visibility="collapsed",
     ).strip().lower()
 with f2:
     status_filter = st.selectbox(
-        "Status filter",
-        options=["All statuses", "Needs attention (≤90 days)", "Expired only", "≤30 days", "In date only"],
+        "Status",
+        options=["All statuses", "Required — missing", "Needs attention (≤90 days)", "Expired only", "≤30 days", "In date only"],
         label_visibility="collapsed",
     )
 with f3:
     type_filter = st.multiselect(
-        "Training type filter",
-        options=[t["name"] for t in types],
-        placeholder="All training types",
-        label_visibility="collapsed",
+        "Training types", options=[t["name"] for t in types_raw],
+        placeholder="All training types", label_visibility="collapsed",
     )
 
-
-# Cell background colours — modern pastels
-_CELL_BG = {
-    "expired": "#FEE2E2",
-    "7":       "#FEE2E2",
-    "30":      "#FEF3C7",
-    "90":      "#FEF9C3",
-    None:      "#DCFCE7",
-}
-_CELL_COLOUR = {
-    "expired": "#991B1B",
-    "7":       "#991B1B",
-    "30":      "#92400E",
-    "90":      "#713F12",
-    None:      "#166534",
-}
+_CELL_BG = {"expired": "#FEE2E2", "7": "#FEE2E2", "30": "#FEF3C7", "90": "#FEF9C3", None: "#DCFCE7"}
+_CELL_FG = {"expired": "#991B1B", "7": "#991B1B", "30": "#92400E", "90": "#713F12", None: "#166534"}
 
 
 def row_passes_filter(p, person_recs):
-    if search:
-        haystack = f"{p['name']} {p.get('job_title') or ''}".lower()
-        if search not in haystack:
-            return False
+    if search and search not in f"{p['name']} {p.get('job_title') or ''}".lower():
+        return False
     if status_filter == "All statuses":
         return True
+    if status_filter == "Required — missing":
+        req_ids = req_by_role.get(p.get("job_title") or "", set())
+        if not req_ids:
+            return False
+        return any(not rec_by_pair.get((p["id"], tid)) for tid in req_ids)
     today = date.today()
     for rec in person_recs:
         if not rec or not rec.get("expiry_date"):
@@ -97,17 +87,20 @@ def row_passes_filter(p, person_recs):
     return status_filter == "In date only" and not [r for r in person_recs if r]
 
 
-# Filter visible types
-visible_types = [t for t in types if not type_filter or t["name"] in type_filter]
+# Sort visible types by category then name for grouping
+visible_types = sorted(
+    [t for t in types_raw if not type_filter or t["name"] in type_filter],
+    key=lambda t: (t.get("category") or "General", t["name"]),
+)
 
-# Build rows
 today = date.today()
 rows_data = []
 for p in people:
     person_recs = [rec_by_pair.get((p["id"], t["id"])) for t in visible_types]
     if not row_passes_filter(p, person_recs):
         continue
-    row = {"_pid": p["id"], "Person": p["name"]}
+    row: dict = {"_pid": p["id"], "_job": p.get("job_title") or "", "Person": p["name"]}
+    required_ids = req_by_role.get(p.get("job_title") or "", set())
     for t in visible_types:
         rec = rec_by_pair.get((p["id"], t["id"]))
         if rec and rec.get("expiry_date"):
@@ -116,6 +109,8 @@ for p in people:
             row[t["name"]] = {"display": exp.strftime("%d %b %y"), "window": window, "kind": "dated"}
         elif rec and rec.get("completed_date"):
             row[t["name"]] = {"display": "Lifetime", "window": None, "kind": "lifetime"}
+        elif t["id"] in required_ids:
+            row[t["name"]] = {"display": "Required", "window": "expired", "kind": "required-missing"}
         else:
             row[t["name"]] = {"display": "", "window": None, "kind": "missing"}
     rows_data.append(row)
@@ -125,18 +120,18 @@ if not rows_data and (search or status_filter != "All statuses" or type_filter):
     st.info("No rows match your filters. Try clearing the search or status filter.")
 elif not people:
     st.info("Add people on the People page first.")
-elif not types:
+elif not types_raw:
     st.info("Add training types on the Training Types page first.")
 else:
     # ===== Stats band =====
     total_cells = len(rows_data) * len(visible_types)
-    filled = sum(1 for row in rows_data for t in visible_types if row[t["name"]]["kind"] != "missing")
-    missing = total_cells - filled
+    filled = sum(1 for row in rows_data for t in visible_types if row[t["name"]]["kind"] in ("dated", "lifetime"))
+    req_missing = sum(1 for row in rows_data for t in visible_types if row[t["name"]]["kind"] == "required-missing")
     expired_n = sum(1 for row in rows_data for t in visible_types if row[t["name"]]["window"] in ("expired", "7"))
     coverage = round(100 * filled / total_cells) if total_cells else 100
     cov_col = "#16A34A" if coverage >= 80 else "#D97706" if coverage >= 60 else "#DC2626"
     exp_col = "#DC2626" if expired_n > 0 else "#16A34A"
-    mis_col = "#D97706" if missing > 0 else "#94A3B8"
+    req_col = "#DC2626" if req_missing > 0 else "#94A3B8"
 
     st.markdown(
         '<div class="matrix-stats">'
@@ -144,65 +139,68 @@ else:
         f'<div class="mstat"><div class="mstat-label">Types</div><b>{len(visible_types)}</b></div>'
         f'<div class="mstat"><div class="mstat-label">Coverage</div><b style="color:{cov_col};">{coverage}%</b></div>'
         f'<div class="mstat"><div class="mstat-label">Expired / Due</div><b style="color:{exp_col};">{expired_n}</b></div>'
-        f'<div class="mstat"><div class="mstat-label">Missing</div><b style="color:{mis_col};">{missing}</b></div>'
+        f'<div class="mstat"><div class="mstat-label">Req. Missing</div><b style="color:{req_col};">{req_missing}</b></div>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    # ===== HTML matrix table =====
-    type_headers = "".join(f'<th class="mat-th">{t["name"]}</th>' for t in visible_types)
-    thead = f'<tr><th class="mat-th mat-th-person">Person</th>{type_headers}</tr>'
+    # ===== Category group headers =====
+    cat_groups: dict[str, list] = {}
+    for t in visible_types:
+        cat = t.get("category") or "General"
+        cat_groups.setdefault(cat, []).append(t)
 
+    cat_row = '<th class="mat-th mat-th-person" rowspan="2">Person</th>'
+    for cat, cat_types in cat_groups.items():
+        cat_row += f'<th class="mat-th mat-cat-header" colspan="{len(cat_types)}">{cat}</th>'
+
+    type_row = "".join(f'<th class="mat-th">{t["name"]}</th>' for t in visible_types)
+    thead = f'<tr>{cat_row}</tr><tr>{type_row}</tr>'
+
+    # ===== Table rows =====
     tbody = ""
     for row in rows_data:
-        cells = f'<td class="mat-td mat-td-person">{row["Person"]}</td>'
+        cells = f'<td class="mat-td mat-td-person">{row["Person"]}<br><small style="color:#94A3B8;font-weight:400;">{row["_job"]}</small></td>'
         for t in visible_types:
             cell = row[t["name"]]
-            if cell["kind"] == "missing":
+            if cell["kind"] == "required-missing":
+                cells += '<td class="mat-td mat-required">Required</td>'
+            elif cell["kind"] == "missing":
                 cells += '<td class="mat-td mat-missing">—</td>'
             elif cell["kind"] == "lifetime":
                 cells += '<td class="mat-td mat-lifetime">Lifetime</td>'
             else:
                 bg = _CELL_BG.get(cell["window"], "#DCFCE7")
-                fg = _CELL_COLOUR.get(cell["window"], "#166534")
+                fg = _CELL_FG.get(cell["window"], "#166534")
                 cells += f'<td class="mat-td" style="background:{bg};color:{fg};">{cell["display"]}</td>'
         tbody += f"<tr>{cells}</tr>"
 
     st.markdown(
         '<div class="matrix-wrap"><table class="matrix-table"><thead>'
-        + thead
-        + '</thead><tbody>'
-        + tbody
-        + '</tbody></table></div>',
+        + thead + '</thead><tbody>' + tbody + '</tbody></table></div>',
         unsafe_allow_html=True,
     )
 
-    # ===== Export CSV =====
-    export_rows = []
-    for row in rows_data:
-        r = {"Person": row["Person"]}
-        for t in visible_types:
-            r[t["name"]] = row[t["name"]]["display"]
-        export_rows.append(r)
-    csv_data = pd.DataFrame(export_rows).to_csv(index=False)
+    # CSV export
+    export_rows = [{"Person": row["Person"], **{t["name"]: row[t["name"]]["display"] for t in visible_types}} for row in rows_data]
     st.download_button(
         "Export current view as CSV",
-        data=csv_data,
+        data=pd.DataFrame(export_rows).to_csv(index=False),
         file_name="training_matrix.csv",
         mime="text/csv",
     )
 
 st.divider()
 
-# ===== Edit single record / Bulk update tabs =====
+# ===== Edit / Bulk tabs =====
 edit_tab, bulk_tab = st.tabs(["✎ Edit a record", "⚡ Bulk update"])
 
 with edit_tab:
-    if not people or not types:
+    if not people or not types_raw:
         st.info("Add people and training types first.")
     else:
         person = st.selectbox("Person", options=people, format_func=lambda p: p["name"], key="edit_person")
-        ttype = st.selectbox("Training type", options=types, format_func=lambda t: t["name"], key="edit_type")
+        ttype = st.selectbox("Training type", options=types_raw, format_func=lambda t: t["name"], key="edit_type")
         existing = rec_by_pair.get((person["id"], ttype["id"]))
         c1, c2 = st.columns(2)
         with c1:
@@ -213,30 +211,21 @@ with edit_tab:
             )
         with c2:
             expiry = st.date_input(
-                "Expiry date (leave blank for lifetime)",
+                "Expiry date (blank = lifetime)",
                 value=date.fromisoformat(existing["expiry_date"]) if existing and existing.get("expiry_date") else None,
                 key="edit_expiry",
             )
         notes = st.text_input("Notes", value=(existing or {}).get("notes") or "", key="edit_notes")
         if existing:
-            exp_val = existing.get("expiry_date")
-            comp_val = existing.get("completed_date")
-            if exp_val:
-                exp_d = date.fromisoformat(exp_val) if isinstance(exp_val, str) else exp_val
-                w = classify_window(exp_d, today=date.today())
-                status_map = {"expired": "Expired", "7": "≤ 7 days", "30": "≤ 30 days", "90": "≤ 90 days"}
-                st.caption(f"Current status: **{status_map.get(w, 'In date')}**")
-            elif comp_val:
-                st.caption("Current status: **Lifetime**")
+            w = classify_window(date.fromisoformat(existing["expiry_date"]), today=today) if existing.get("expiry_date") else None
+            status_label = {"expired": "Expired", "7": "≤ 7 days", "30": "≤ 30 days", "90": "≤ 90 days"}.get(w, "In date") if existing.get("expiry_date") else "Lifetime"
+            st.caption(f"Current status: **{status_label}**")
         if st.button("Save record", key="edit_save", type="primary"):
             sb.table("training_records").upsert(
-                {
-                    "person_id": person["id"],
-                    "training_type_id": ttype["id"],
-                    "completed_date": completed.isoformat() if completed else None,
-                    "expiry_date": expiry.isoformat() if expiry else None,
-                    "notes": notes or None,
-                },
+                {"person_id": person["id"], "training_type_id": ttype["id"],
+                 "completed_date": completed.isoformat() if completed else None,
+                 "expiry_date": expiry.isoformat() if expiry else None,
+                 "notes": notes or None},
                 on_conflict="person_id,training_type_id",
             ).execute()
             st.success(f"Saved — {person['name']} / {ttype['name']}.")
@@ -244,40 +233,30 @@ with edit_tab:
 
 with bulk_tab:
     st.caption("Mark **multiple people** complete on the **same training type** at once. Ideal after a group training day.")
-    if not people or not types:
+    if not people or not types_raw:
         st.info("Add people and training types first.")
     else:
-        bulk_type = st.selectbox("Training type", options=types, format_func=lambda t: t["name"], key="bulk_type")
+        bulk_type = st.selectbox("Training type", options=types_raw, format_func=lambda t: t["name"], key="bulk_type")
         bulk_people = st.multiselect(
-            "People to update",
-            options=people,
-            format_func=lambda p: p["name"],
-            placeholder="Select people from the list…",
-            key="bulk_people",
+            "People to update", options=people, format_func=lambda p: p["name"],
+            placeholder="Select people…", key="bulk_people",
         )
         b1, b2 = st.columns(2)
         with b1:
             bulk_completed = st.date_input("Completed on", value=date.today(), key="bulk_completed")
         with b2:
-            bulk_expiry = st.date_input("Expires on (leave blank = lifetime)", value=None, key="bulk_expiry")
-        bulk_notes = st.text_input("Notes (applied to all selected)", key="bulk_notes")
-
+            bulk_expiry = st.date_input("Expires on (blank = lifetime)", value=None, key="bulk_expiry")
+        bulk_notes = st.text_input("Notes (applied to all)", key="bulk_notes")
         if st.button(
-            f"Mark {len(bulk_people)} {'person' if len(bulk_people) == 1 else 'people'} complete",
-            disabled=not bulk_people,
-            key="bulk_save",
-            type="primary",
+            f"Mark {len(bulk_people)} {'person' if len(bulk_people)==1 else 'people'} complete",
+            disabled=not bulk_people, key="bulk_save", type="primary",
         ):
-            payload = [
-                {
-                    "person_id": p["id"],
-                    "training_type_id": bulk_type["id"],
-                    "completed_date": bulk_completed.isoformat() if bulk_completed else None,
-                    "expiry_date": bulk_expiry.isoformat() if bulk_expiry else None,
-                    "notes": bulk_notes or None,
-                }
-                for p in bulk_people
-            ]
-            sb.table("training_records").upsert(payload, on_conflict="person_id,training_type_id").execute()
+            sb.table("training_records").upsert(
+                [{"person_id": p["id"], "training_type_id": bulk_type["id"],
+                  "completed_date": bulk_completed.isoformat() if bulk_completed else None,
+                  "expiry_date": bulk_expiry.isoformat() if bulk_expiry else None,
+                  "notes": bulk_notes or None} for p in bulk_people],
+                on_conflict="person_id,training_type_id",
+            ).execute()
             st.success(f"Updated {len(bulk_people)} records for {bulk_type['name']}.")
             st.rerun()
