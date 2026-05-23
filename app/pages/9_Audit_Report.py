@@ -86,8 +86,8 @@ for t in sorted_types:
         f'<th style="width:{_COL_W}px;min-width:{_COL_W}px;max-width:{_COL_W}px;background:#F8FAFC;'
         f'border:1px solid #E2E8F0;padding:4px 2px;vertical-align:bottom;text-align:center;">'
         f'<div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;'
-        f'height:115px;font-size:9px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;'
-        f'color:#475569;overflow:hidden;text-overflow:ellipsis;">{t["name"]}</div></th>'
+        f'height:200px;font-size:9px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;'
+        f'color:#475569;">{t["name"]}</div></th>'
     )
 
 # Table rows
