@@ -153,17 +153,86 @@ def current_user_role() -> str | None:
     return row["role"] if row else None
 
 
+def current_user_email() -> str | None:
+    session = get_session()
+    if not session:
+        return None
+    user = getattr(session, "user", None)
+    return getattr(user, "email", None) if user else None
+
+
+def current_person() -> dict | None:
+    """Resolve the signed-in worker to their people row.
+
+    In demo mode (AUTH_ENABLED=false) returns the person stashed in
+    ``st.session_state['demo_person']`` if any, otherwise None so the
+    worker page can prompt for one.
+    """
+    if not _auth_enabled():
+        return st.session_state.get("demo_person")
+    session = get_session()
+    if not session:
+        return None
+    sb = anon_client()
+    sb.auth.set_session(session.access_token, session.refresh_token)
+    rows = (
+        sb.table("people")
+        .select("*")
+        .eq("auth_user_id", session.user.id)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    return rows[0] if rows else None
+
+
+def _render_sidebar_user():
+    """Render signed-in user + Sign out button in the sidebar.
+    Called from require_auth/require_admin so it appears on every gated page."""
+    if not _auth_enabled():
+        with st.sidebar:
+            st.caption("Demo mode")
+        return
+    email = current_user_email() or "Signed in"
+    with st.sidebar:
+        st.markdown(f"**{email}**")
+        if st.button("Sign out", key="_logout_btn", use_container_width=True):
+            try:
+                sb = anon_client()
+                session = get_session()
+                if session:
+                    sb.auth.set_session(session.access_token, session.refresh_token)
+                sb.auth.sign_out()
+            except Exception:
+                pass
+            for k in ("sb_session", "otp_stage", "otp_email", "demo_person"):
+                st.session_state.pop(k, None)
+            st.rerun()
+
+
+def require_worker_or_admin():
+    """Gate a page so any signed-in user can access. Used by My Profile."""
+    if not _auth_enabled():
+        _render_sidebar_user()
+        return
+    require_auth()
+
+
 def require_auth():
     if not _auth_enabled():
+        _render_sidebar_user()
         return  # Demo mode: no auth gate
     handle_callback()
     if not get_session():
         login_screen()
         st.stop()
+    _render_sidebar_user()
 
 
 def require_admin():
     if not _auth_enabled():
+        _render_sidebar_user()
         return  # Demo mode: everyone is admin
     require_auth()
     if current_user_role() != "admin":

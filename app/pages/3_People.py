@@ -2,12 +2,12 @@ from datetime import date
 
 import streamlit as st
 
-from app.auth import require_auth
+from app.auth import current_user_email, require_admin
 from app.branding import help_box, inject_css, page_header
-from beacon.db import anon_client
+from beacon.db import anon_client, service_client
 from beacon.reminders import compliance_summary
 
-require_auth()
+require_admin()
 inject_css()
 page_header("People", "Add, edit, and manage workforce records.")
 help_box(
@@ -26,6 +26,7 @@ with st.expander("Add new person", expanded=False):
         new_job = st.text_input("Job title", key="new_job")
         new_paye = st.checkbox("PAYE employee", key="new_paye")
     with c2:
+        new_email = st.text_input("Work email", key="new_email", help="Required if you want to invite them to the portal later.")
         new_ni = st.text_input("NI number", key="new_ni")
         new_start = st.date_input("Start date", value=None, key="new_start")
     if st.button("Add person", key="add_person", type="primary"):
@@ -38,6 +39,7 @@ with st.expander("Add new person", expanded=False):
                     "job_title": new_job.strip() or None,
                     "paye": new_paye,
                     "ni_number": new_ni.strip() or None,
+                    "email": new_email.strip().lower() or None,
                     "start_date": new_start.isoformat() if new_start else None,
                 }).execute()
                 st.success(f"Added {new_name.strip()}.")
@@ -158,6 +160,12 @@ def _render_people(plist: list, tab_key: str) -> None:
                     key=f"ni_{tab_key}_{p['id']}",
                     help="National Insurance number — stored for reference only.",
                 )
+                new_email = st.text_input(
+                    "Work email",
+                    value=p.get("email") or "",
+                    key=f"em_{tab_key}_{p['id']}",
+                    help="Used to invite them to the worker portal.",
+                )
             with col2:
                 new_paye = st.checkbox(
                     "PAYE employee",
@@ -175,18 +183,61 @@ def _render_people(plist: list, tab_key: str) -> None:
                     key=f"act_{tab_key}_{p['id']}",
                 )
 
-            btn_col, link_col = st.columns([1, 1])
+            btn_col, invite_col, link_col = st.columns([1, 1, 1])
             with btn_col:
                 if st.button("Save changes", key=f"sv_{tab_key}_{p['id']}", type="primary"):
                     sb.table("people").update({
                         "job_title": new_title.strip() or None,
                         "ni_number": new_ni.strip() or None,
+                        "email": new_email.strip().lower() or None,
                         "paye": new_paye,
                         "start_date": new_start.isoformat() if new_start else None,
                         "active": new_active,
                     }).eq("id", p["id"]).execute()
                     st.success("Saved.")
                     st.rerun()
+            with invite_col:
+                already_linked = bool(p.get("auth_user_id"))
+                invite_target = (new_email.strip().lower() or (p.get("email") or "").lower())
+                invite_disabled = already_linked or not invite_target
+                invite_label = "Already linked" if already_linked else "Invite to portal"
+                if st.button(
+                    invite_label,
+                    key=f"inv_{tab_key}_{p['id']}",
+                    disabled=invite_disabled,
+                    use_container_width=True,
+                ):
+                    try:
+                        admin_sb = service_client()
+                        # Create the auth user (or no-op if already exists).
+                        # auth.admin.create_user is the ONLY supported path —
+                        # never insert directly into auth.users (see CLAUDE.md).
+                        try:
+                            admin_sb.auth.admin.create_user({
+                                "email": invite_target,
+                                "email_confirm": True,
+                            })
+                        except Exception as create_err:
+                            # If the user already exists, that's fine — we still
+                            # want to record the invite and let them sign in.
+                            if "already" not in str(create_err).lower():
+                                raise
+
+                        # Persist email on people row if it changed.
+                        if (p.get("email") or "").lower() != invite_target:
+                            sb.table("people").update({"email": invite_target}).eq("id", p["id"]).execute()
+
+                        # Record the invite (unique partial index prevents duplicate pending).
+                        invited_by_email = current_user_email()
+                        sb.table("invites").insert({
+                            "email": invite_target,
+                            "person_id": p["id"],
+                            "invited_by_email": invited_by_email,
+                        }).execute()
+                        st.success(f"Invited {invite_target}. They can now sign in via OTP.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Could not invite — {e}")
             with link_col:
                 try:
                     st.page_link("pages/7_Profile.py", label="View full profile →")

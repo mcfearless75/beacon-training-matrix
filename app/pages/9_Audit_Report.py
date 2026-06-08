@@ -2,12 +2,12 @@ from datetime import date
 
 import streamlit as st
 
-from app.auth import require_auth
+from app.auth import require_admin
 from app.branding import help_box, inject_css, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window, compliance_summary
 
-require_auth()
+require_admin()
 inject_css()
 page_header(
     "Audit Report",
