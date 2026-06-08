@@ -4,7 +4,7 @@ import streamlit as st
 
 from app.auth import current_user_email, get_session, require_admin
 from app.branding import help_box, inject_css, page_header
-from beacon.db import anon_client
+from beacon.db import service_client
 
 require_admin()
 inject_css()
@@ -16,7 +16,7 @@ help_box(
     "the worker knows what to fix. Every decision is logged.",
 )
 
-sb = anon_client()
+sb = service_client()  # admin page — service role bypasses RLS; gated by require_admin()
 
 
 def _signed_url(path: str | None) -> str | None:

@@ -2,7 +2,7 @@ import streamlit as st
 
 from app.auth import require_admin
 from app.branding import help_box, inject_css, page_header
-from beacon.db import anon_client
+from beacon.db import service_client
 
 require_admin()
 inject_css()
@@ -16,7 +16,7 @@ help_box(
     "the Matrix will flag anyone missing required training as <b>Required — Missing</b>.",
 )
 
-sb = anon_client()
+sb = service_client()  # admin page — service role bypasses RLS; gated by require_admin()
 
 _CATEGORIES = ["Core H&S", "First Aid", "Site Operations", "Plant & Equipment", "Specialist", "General"]
 

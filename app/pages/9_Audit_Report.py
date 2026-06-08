@@ -4,7 +4,7 @@ import streamlit as st
 
 from app.auth import require_admin
 from app.branding import help_box, inject_css, page_header
-from beacon.db import anon_client
+from beacon.db import service_client
 from beacon.reminders import classify_window, compliance_summary
 
 require_admin()
@@ -20,7 +20,7 @@ help_box(
     "Landscape orientation works best for wide matrices.",
 )
 
-sb = anon_client()
+sb = service_client()  # admin page — service role bypasses RLS; gated by require_admin()
 people_all = sb.table("people").select("*").eq("active", True).order("name").execute().data
 types_all = sb.table("training_types").select("id, name, category").eq("active", True).order("name").execute().data
 records_all = sb.table("training_records").select("person_id, training_type_id, expiry_date, completed_date").execute().data

@@ -16,7 +16,7 @@ help_box(
     "<b>Import</b> — if you have an existing training matrix spreadsheet, upload it here to "
     "bulk-load people and training types in one go.",
 )
-sb = anon_client()
+sb = service_client()  # admin page — service role bypasses RLS; gated by require_admin()
 
 settings = sb.table("settings").select("*").eq("id", 1).single().execute().data or {}
 st.subheader("Reminder recipient")
