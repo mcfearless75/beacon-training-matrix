@@ -186,15 +186,26 @@ def _render_people(plist: list, tab_key: str) -> None:
             btn_col, invite_col, link_col = st.columns([1, 1, 1])
             with btn_col:
                 if st.button("Save changes", key=f"sv_{tab_key}_{p['id']}", type="primary"):
-                    sb.table("people").update({
+                    new_email_clean = new_email.strip().lower() or None
+                    old_email_clean = (p.get("email") or "").lower() or None
+                    email_changed = new_email_clean != old_email_clean
+                    payload = {
                         "job_title": new_title.strip() or None,
                         "ni_number": new_ni.strip() or None,
-                        "email": new_email.strip().lower() or None,
+                        "email": new_email_clean,
                         "paye": new_paye,
                         "start_date": new_start.isoformat() if new_start else None,
                         "active": new_active,
-                    }).eq("id", p["id"]).execute()
-                    st.success("Saved.")
+                    }
+                    # Email changed — clear the auth link so it re-links by email
+                    # on the worker's next sign-in (avoids stale auth_user_id mapping).
+                    if email_changed:
+                        payload["auth_user_id"] = None
+                    sb.table("people").update(payload).eq("id", p["id"]).execute()
+                    if email_changed:
+                        st.success("Saved. Auth link cleared — worker must sign in again to re-link.")
+                    else:
+                        st.success("Saved.")
                     st.rerun()
             with invite_col:
                 already_linked = bool(p.get("auth_user_id"))

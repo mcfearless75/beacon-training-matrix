@@ -167,7 +167,13 @@ with st.expander("My details", expanded=False):
         new_values: dict[str, str | None] = {}
         for key, label, kind in EDITABLE_FIELDS:
             current = person.get(key) or ""
-            if kind == "textarea":
+            # Workers must not change their sign-in email — it's their auth credential.
+            # Show it read-only in live auth mode; demo mode leaves it editable for admin testing.
+            if key == "email" and _auth_enabled():
+                st.text_input(label, value=current, key=f"f_{key}", disabled=True,
+                              help="Email is locked — contact your admin to change it.")
+                new_values[key] = current  # preserve unchanged value
+            elif kind == "textarea":
                 new_values[key] = st.text_area(label, value=current, key=f"f_{key}")
             else:
                 new_values[key] = st.text_input(label, value=current, key=f"f_{key}")
