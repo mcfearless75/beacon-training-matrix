@@ -3,14 +3,62 @@ import os
 
 import streamlit as st
 import streamlit.components.v1 as components
+from streamlit_cookies_controller import CookieController
 
 from app.branding import LOGO_PATH, inject_css
 from beacon.config import load_config
 from beacon.db import anon_client
 
+_COOKIE_NAME = "beacon_rt"
+_COOKIE_MAX_AGE = 7 * 24 * 3600  # 7 days in seconds
+
 
 def _auth_enabled() -> bool:
     return os.getenv("AUTH_ENABLED", "false").lower() in ("1", "true", "yes", "on")
+
+
+def _cookies() -> CookieController:
+    """Return a shared CookieController instance (same key = same component slot)."""
+    return CookieController(key="_beacon_cc")
+
+
+def _save_rt_cookie(session) -> None:
+    """Persist the refresh token in a browser cookie so sessions survive restarts."""
+    rt = getattr(session, "refresh_token", None)
+    if rt:
+        try:
+            _cookies().set(_COOKIE_NAME, rt, max_age=_COOKIE_MAX_AGE)
+        except Exception:
+            pass
+
+
+def _clear_rt_cookie() -> None:
+    """Remove the persisted refresh token cookie on explicit sign-out."""
+    try:
+        _cookies().remove(_COOKIE_NAME)
+    except Exception:
+        pass
+
+
+def _try_restore_from_cookie() -> bool:
+    """On a cold start (session_state empty), attempt to restore the Supabase session
+    using the refresh token stored in the browser cookie.
+    Returns True if a valid session was restored."""
+    try:
+        rt = _cookies().get(_COOKIE_NAME)
+        if not rt:
+            return False
+        sb = anon_client()
+        result = sb.auth.refresh_session(rt)
+        session = getattr(result, "session", None)
+        if session:
+            st.session_state["sb_session"] = session
+            # Update cookie with the new refresh token
+            _save_rt_cookie(session)
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def get_session():
@@ -19,7 +67,6 @@ def get_session():
     if session is None:
         return None
     # Attempt a silent token refresh so long-lived sessions don't go stale.
-    # Supabase refresh_session() uses the refresh_token to get a new access_token.
     try:
         sb = anon_client()
         refreshed = sb.auth.set_session(session.access_token, session.refresh_token)
@@ -93,8 +140,6 @@ def login_screen():
         if st.button("Send sign-in code", use_container_width=True) and email:
             sb = anon_client()
             try:
-                # shouldCreateUser controls whether new users are created.
-                # Keep default (True) so the trigger creates app_users rows on first sign-in.
                 sb.auth.sign_in_with_otp({"email": email})
                 st.session_state["otp_email"] = email
                 st.session_state["otp_stage"] = "verify_code"
@@ -128,6 +173,8 @@ def login_screen():
                 st.session_state["sb_session"] = session
                 st.session_state.pop("otp_stage", None)
                 st.session_state.pop("otp_email", None)
+                # Persist refresh token so session survives container restarts
+                _save_rt_cookie(session)
                 st.rerun()
             except Exception as e:
                 st.error(_friendly_otp_error(e))
@@ -201,7 +248,6 @@ def current_person() -> dict | None:
         return rows[0]
 
     # Fallback: match by email and auto-link on first sign-in.
-    # Means admins only need to import workers — no separate invite step required.
     email = getattr(getattr(session, "user", None), "email", None)
     if not email:
         return None
@@ -218,24 +264,21 @@ def current_person() -> dict | None:
     if not email_rows:
         return None
     person = email_rows[0]
-    # Write the link back so subsequent lookups use the fast path
     try:
         sb.table("people").update({"auth_user_id": session.user.id}).eq("id", person["id"]).execute()
         person["auth_user_id"] = session.user.id
     except Exception:
-        pass  # Non-fatal: profile still loads, link retried next sign-in
+        pass
     return person
 
 
 def _render_sidebar_user():
     """Render signed-in user + Sign out button in the sidebar.
-    Called from require_auth/require_admin so it appears on every gated page.
     Guard prevents duplicate widget keys when page scripts also call require_auth."""
     if st.session_state.get("_sidebar_rendered"):
         return
     st.session_state["_sidebar_rendered"] = True
     # Remove the login-body class so its narrow max-width doesn't bleed into app pages.
-    # Streamlit is a SPA — body classes set during login persist until explicitly cleared.
     components.html(
         "<script>window.parent.document.body.classList.remove('login-active');</script>",
         height=0,
@@ -262,6 +305,7 @@ def _render_sidebar_user():
                     sb.auth.sign_out()
                 except Exception:
                     pass
+                _clear_rt_cookie()
             for k in ("sb_session", "otp_stage", "otp_email", "demo_person"):
                 st.session_state.pop(k, None)
             st.rerun()
@@ -281,6 +325,11 @@ def require_auth():
         return  # Demo mode: no auth gate
     handle_callback()
     if not get_session():
+        # Cold start — try to restore from persisted browser cookie before
+        # forcing the user through the OTP flow again.
+        if _try_restore_from_cookie():
+            _render_sidebar_user()
+            return
         login_screen()
         st.stop()
     _render_sidebar_user()

@@ -4,3 +4,4 @@ resend>=2.0
 openpyxl>=3.1
 python-dotenv>=1.0
 pandas>=2.2
+streamlit-cookies-controller>=0.0.4
