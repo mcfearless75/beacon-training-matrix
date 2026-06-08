@@ -209,18 +209,26 @@ def _render_people(plist: list, tab_key: str) -> None:
                 ):
                     try:
                         admin_sb = service_client()
-                        # Create the auth user (or no-op if already exists).
-                        # auth.admin.create_user is the ONLY supported path —
+                        # Send the Supabase invite email (magic link).
+                        # auth.admin.invite_user_by_email is the ONLY supported path —
                         # never insert directly into auth.users (see CLAUDE.md).
+                        already_existed = False
                         try:
-                            admin_sb.auth.admin.create_user({
-                                "email": invite_target,
-                                "email_confirm": True,
-                            })
-                        except Exception as create_err:
-                            # If the user already exists, that's fine — we still
-                            # want to record the invite and let them sign in.
-                            if "already" not in str(create_err).lower():
+                            try:
+                                admin_sb.auth.admin.invite_user_by_email(
+                                    invite_target,
+                                    {"data": {"person_id": str(p["id"])}},
+                                )
+                            except TypeError:
+                                # Older supabase-py signature without options kwarg.
+                                admin_sb.auth.admin.invite_user_by_email(invite_target)
+                        except Exception as invite_err:
+                            # If the user already exists, Supabase re-sends the invite
+                            # but may also raise — treat duplicates as benign.
+                            msg = str(invite_err).lower()
+                            if "already" in msg or "registered" in msg or "exists" in msg:
+                                already_existed = True
+                            else:
                                 raise
 
                         # Persist email on people row if it changed.
@@ -229,12 +237,29 @@ def _render_people(plist: list, tab_key: str) -> None:
 
                         # Record the invite (unique partial index prevents duplicate pending).
                         invited_by_email = current_user_email()
-                        sb.table("invites").insert({
-                            "email": invite_target,
-                            "person_id": p["id"],
-                            "invited_by_email": invited_by_email,
-                        }).execute()
-                        st.success(f"Invited {invite_target}. They can now sign in via OTP.")
+                        try:
+                            sb.table("invites").insert({
+                                "email": invite_target,
+                                "person_id": p["id"],
+                                "invited_by_email": invited_by_email,
+                            }).execute()
+                        except Exception as insert_err:
+                            # Duplicate pending invite — update the existing row instead.
+                            msg = str(insert_err).lower()
+                            if "duplicate" in msg or "unique" in msg or "23505" in msg:
+                                from datetime import datetime, timezone
+                                # invites has no 'status' column — pending = accepted_at null & revoked_at null
+                                sb.table("invites").update({
+                                    "invited_at": datetime.now(timezone.utc).isoformat(),
+                                    "invited_by_email": invited_by_email,
+                                }).eq("email", invite_target).is_("accepted_at", "null").is_("revoked_at", "null").execute()
+                            else:
+                                raise
+
+                        if already_existed:
+                            st.success(f"User already exists — invite link re-sent to {invite_target}.")
+                        else:
+                            st.success(f"Invite email sent to {invite_target}.")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Could not invite — {e}")

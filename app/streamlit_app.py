@@ -1,7 +1,17 @@
+"""Beacon Training Matrix — main entry point.
+
+Uses st.navigation() so the sidebar adapts to the signed-in user's role:
+- Workers (role='user'): only see My Profile.
+- Admins (role='admin' or demo mode): see everything.
+
+Page files under app/pages/ are still gated by their own require_auth /
+require_admin calls, so direct URL access is also blocked.
+"""
+
 import streamlit as st
 
 from app.auth import current_user_role, require_auth
-from app.branding import LOGO_PATH, inject_css, loading_overlay, page_header
+from app.branding import LOGO_PATH
 
 st.set_page_config(
     page_title="Beacon Training Matrix",
@@ -9,96 +19,56 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto",
 )
+
+# Gate the whole app. In demo mode this is a no-op; in auth mode it shows
+# the OTP login screen until a session exists.
 require_auth()
-inject_css()
-loading_overlay()
 
-with st.sidebar:
-    if LOGO_PATH.exists():
-        st.image(str(LOGO_PATH), width=160)
-    st.markdown("### Beacon Training Matrix")
-    role = current_user_role()
-    if role:
-        st.caption(f"Role: **{role}**")
-    st.divider()
-    st.markdown(
-        """
-        **Quick navigation**
-        - **Dashboard** — compliance score + what's expiring
-        - **Matrix** — full traffic-light view + bulk update
-        - **People** — workforce records
-        - **Training Types** — qualification catalogue
-        - **Settings** — import + reminder config
-        - **Admin** — audit log + manual reminders
-        - **Profile** — drill into one person
-        - **Timeline** — 12-month renewal calendar
-        """
-    )
+role = current_user_role() or "user"
+is_admin = role == "admin"
 
-page_header(
-    "Welcome to Beacon Training Matrix",
-    "Track every employee's training expiry. Get reminders before things lapse. Stay compliant.",
+
+# ---- Page definitions ----
+home = st.Page("home.py", title="Home", icon=":material/home:", default=is_admin)
+my_profile = st.Page(
+    "pages/0_My_Profile.py",
+    title="My Profile",
+    icon=":material/person:",
+    default=not is_admin,
 )
-
-# Hero "what does this do" block
-st.markdown(
-    '<div class="hero-card">'
-    '<div class="hero-title">What this app does</div>'
-    '<div class="hero-body">'
-    'Beacon Training Matrix replaces the spreadsheet you used to track who needs '
-    'which training and when it expires. It shows you at a glance what is overdue '
-    'and what is coming up, and it emails a daily digest <b>90, 30, and 7 days</b> '
-    'before any record expires — and on the day it expires.'
-    '</div></div>',
-    unsafe_allow_html=True,
+dashboard = st.Page("pages/1_Dashboard.py", title="Dashboard", icon=":material/dashboard:")
+matrix = st.Page("pages/2_Matrix.py", title="Matrix", icon=":material/grid_view:")
+people = st.Page("pages/3_People.py", title="People", icon=":material/group:")
+training_types = st.Page(
+    "pages/4_Training_Types.py", title="Training Types", icon=":material/school:"
 )
-
-# Three-step how-to
-st.markdown("#### How to use it")
-c1, c2, c3 = st.columns(3, gap="medium")
-
-def _step_card(num: str, title: str, body_html: str) -> str:
-    return (
-        '<div class="step-card">'
-        f'<div class="step-num">{num}</div>'
-        f'<div class="step-title">{title}</div>'
-        f'<div class="step-body">{body_html}</div>'
-        '</div>'
-    )
-
-
-with c1:
-    st.markdown(
-        _step_card(
-            "1", "Set up your data",
-            "Add your team in <b>People</b>. Add the qualifications you track in <b>Training Types</b>. Or upload your existing spreadsheet in <b>Settings</b>."
-        ),
-        unsafe_allow_html=True,
-    )
-with c2:
-    st.markdown(
-        _step_card(
-            "2", "Record completions",
-            "On the <b>Matrix</b> page, pick a person and a training type, enter the completion and expiry dates, hit Save. Leave expiry blank for lifetime certificates."
-        ),
-        unsafe_allow_html=True,
-    )
-with c3:
-    st.markdown(
-        _step_card(
-            "3", "Stay ahead",
-            "Open the <b>Dashboard</b> to see what's expiring. The daily reminder email goes out automatically — configure the recipient in <b>Settings</b>."
-        ),
-        unsafe_allow_html=True,
-    )
-
-st.markdown(
-    """
-    <div style="margin-top: 28px; padding: 14px 18px;
-      background: #F4F6FA; border-radius: 10px; color: #5B6B85; font-size: 0.88rem;">
-      <b>Tip:</b> Start on the <b>Dashboard</b> to see what needs your attention,
-      then move to the <b>Matrix</b> to record updates.
-    </div>
-    """,
-    unsafe_allow_html=True,
+approvals = st.Page(
+    "pages/5_Approvals.py", title="Approvals", icon=":material/fact_check:"
 )
+admin_page = st.Page(
+    "pages/6_Admin.py", title="Admin", icon=":material/admin_panel_settings:"
+)
+profile = st.Page("pages/7_Profile.py", title="Profile", icon=":material/badge:")
+timeline = st.Page("pages/8_Timeline.py", title="Timeline", icon=":material/calendar_month:")
+audit_report = st.Page(
+    "pages/9_Audit_Report.py", title="Audit Report", icon=":material/print:"
+)
+settings = st.Page("pages/10_Settings.py", title="Settings", icon=":material/settings:")
+
+
+# ---- Role-aware navigation ----
+if is_admin:
+    nav = {
+        "": [home, my_profile],
+        "Workforce": [dashboard, matrix, people, training_types],
+        "Reviews": [approvals, audit_report],
+        "Drill-down": [profile, timeline],
+        "Setup": [admin_page, settings],
+    }
+else:
+    # Workers only see their own profile. Direct URL access to other pages
+    # is still blocked by require_admin() at the top of each admin page.
+    nav = [my_profile]
+
+pg = st.navigation(nav, position="sidebar")
+pg.run()

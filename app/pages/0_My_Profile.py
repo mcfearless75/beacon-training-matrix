@@ -9,7 +9,7 @@ Demo mode (AUTH_ENABLED=false): no real auth, so the page presents a
 person picker that simulates "logged in as <name>".
 """
 
-from datetime import date
+from datetime import date, datetime, timezone
 
 import streamlit as st
 
@@ -17,10 +17,11 @@ from app.auth import (
     _auth_enabled,
     current_person,
     current_user_email,
+    get_session,
     require_worker_or_admin,
 )
 from app.branding import help_box, inject_css, page_header
-from beacon.db import service_client
+from beacon.db import anon_client, service_client
 from beacon.reminders import classify_window, compliance_summary
 
 require_worker_or_admin()
@@ -30,7 +31,27 @@ page_header(
     "Keep your details up to date and upload certificates as you renew them.",
 )
 
-sb_admin = service_client()  # bypasses RLS for writes the worker is allowed to make
+
+def _client():
+    """Return a Supabase client bound to the worker's session when AUTH_ENABLED,
+    otherwise service-role (demo mode has no auth.uid())."""
+    sb = anon_client()
+    if _auth_enabled():
+        session = get_session()
+        if session:
+            sb.auth.set_session(session.access_token, session.refresh_token)
+    return sb
+
+
+def _current_auth_uid() -> str | None:
+    if not _auth_enabled():
+        return None
+    session = get_session()
+    return getattr(getattr(session, "user", None), "id", None) if session else None
+
+
+sb = _client()
+sb_admin = service_client()  # used only for demo-mode picker reads + change-log inserts
 
 
 # --------------------------------------------------------------------------
@@ -76,7 +97,7 @@ if person is None:
 # Identity card + compliance
 # --------------------------------------------------------------------------
 records_raw = (
-    sb_admin.table("training_records")
+    sb.table("training_records")
     .select(
         "id, training_type_id, completed_date, expiry_date, notes, "
         "certificate_url, certificate_status, certificate_uploaded_at, "
@@ -89,7 +110,7 @@ records_raw = (
 )
 types = {
     t["id"]: t["name"]
-    for t in sb_admin.table("training_types").select("id, name").execute().data
+    for t in sb.table("training_types").select("id, name").execute().data
 }
 
 today = date.today()
@@ -162,12 +183,13 @@ with st.expander("My details", expanded=False):
             st.info("Nothing changed.")
         else:
             update_payload = {k: (new or None) for k, (_, new) in changes.items()}
+            uid = _current_auth_uid()
             try:
-                sb_admin.table("people").update(update_payload).eq("id", person["id"]).execute()
+                sb.table("people").update(update_payload).eq("id", person["id"]).execute()
                 log_rows = [
                     {
                         "person_id": person["id"],
-                        "changed_by": None,
+                        "changed_by": uid,
                         "changed_by_email": current_user_email() or "demo",
                         "field_name": field,
                         "old_value": str(old) if old else None,
@@ -176,6 +198,8 @@ with st.expander("My details", expanded=False):
                     }
                     for field, (old, new) in changes.items()
                 ]
+                # Use service-role for change-log insert so it works in both modes
+                # (RLS requires changed_by=auth.uid() but demo has no session).
                 sb_admin.table("people_change_log").insert(log_rows).execute()
                 st.success(f"Updated {len(changes)} field(s). Your admin has been notified.")
                 st.rerun()
@@ -237,24 +261,31 @@ for r in sorted(records_raw, key=lambda x: types.get(x["training_type_id"], ""))
                 key=f"up_{r['id']}",
             )
             if upload is not None and st.button("Submit for review", key=f"sub_{r['id']}"):
+                # Path MUST be {person_id}/{training_record_id}/{filename}
+                # to satisfy storage RLS policy certs_worker_upload (folder[1] = person_id).
                 path = f"{person['id']}/{r['id']}/{upload.name}"
+                uid = _current_auth_uid()
                 try:
-                    sb_admin.storage.from_("certificates").upload(
+                    sb.storage.from_("certificates").upload(
                         path,
                         upload.getvalue(),
                         {"content-type": upload.type, "upsert": "true"},
                     )
-                    sb_admin.table("training_records").update(
-                        {
-                            "certificate_url": path,
-                            "certificate_status": "pending",
-                            "certificate_uploaded_at": "now()",
-                            "certificate_reject_reason": None,
-                        }
-                    ).eq("id", r["id"]).execute()
+                    update_payload = {
+                        "certificate_url": path,
+                        "certificate_status": "pending",
+                        "certificate_uploaded_at": datetime.now(timezone.utc).isoformat(),
+                        "certificate_reject_reason": None,
+                    }
+                    if uid:
+                        update_payload["certificate_uploaded_by"] = uid
+                    sb.table("training_records").update(update_payload).eq(
+                        "id", r["id"]
+                    ).execute()
                     sb_admin.table("people_change_log").insert(
                         {
                             "person_id": person["id"],
+                            "changed_by": uid,
                             "changed_by_email": current_user_email() or "demo",
                             "field_name": f"certificate:{name}",
                             "old_value": r.get("certificate_status") or "none",
