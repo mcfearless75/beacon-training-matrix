@@ -14,7 +14,21 @@ def _auth_enabled() -> bool:
 
 
 def get_session():
-    return st.session_state.get("sb_session")
+    """Return the current session, refreshing the access token if it has expired."""
+    session = st.session_state.get("sb_session")
+    if session is None:
+        return None
+    # Attempt a silent token refresh so long-lived sessions don't go stale.
+    # Supabase refresh_session() uses the refresh_token to get a new access_token.
+    try:
+        sb = anon_client()
+        refreshed = sb.auth.set_session(session.access_token, session.refresh_token)
+        if refreshed and getattr(refreshed, "session", None):
+            st.session_state["sb_session"] = refreshed.session
+            return refreshed.session
+    except Exception:
+        pass  # Token still valid or refresh failed — return existing session
+    return session
 
 
 def _logo_data_uri() -> str | None:
