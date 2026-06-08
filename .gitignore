@@ -8,6 +8,15 @@ __pycache__/
 !Training Matrix.xlsx
 .claude/
 .claude-flow/
+.mcp.json
 docs/
 *.egg-info/
 .coverage
+
+# Accidental shell-redirect droppings — never commit
+None
+str
+button*
+[0-9]
+[0-9][0-9]
+[0-9][0-9][0-9]
