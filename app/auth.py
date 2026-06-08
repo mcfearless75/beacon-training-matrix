@@ -172,6 +172,8 @@ def current_person() -> dict | None:
         return None
     sb = anon_client()
     sb.auth.set_session(session.access_token, session.refresh_token)
+
+    # Primary lookup: by auth_user_id (already linked)
     rows = (
         sb.table("people")
         .select("*")
@@ -181,7 +183,34 @@ def current_person() -> dict | None:
         .data
         or []
     )
-    return rows[0] if rows else None
+    if rows:
+        return rows[0]
+
+    # Fallback: match by email and auto-link on first sign-in.
+    # Means admins only need to import workers — no separate invite step required.
+    email = getattr(getattr(session, "user", None), "email", None)
+    if not email:
+        return None
+    email_rows = (
+        sb.table("people")
+        .select("*")
+        .eq("email", email)
+        .is_("auth_user_id", "null")
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    if not email_rows:
+        return None
+    person = email_rows[0]
+    # Write the link back so subsequent lookups use the fast path
+    try:
+        sb.table("people").update({"auth_user_id": session.user.id}).eq("id", person["id"]).execute()
+        person["auth_user_id"] = session.user.id
+    except Exception:
+        pass  # Non-fatal: profile still loads, link retried next sign-in
+    return person
 
 
 def _render_sidebar_user():
