@@ -190,22 +190,28 @@ def current_person() -> dict | None:
 def _render_sidebar_user():
     """Render signed-in user + Sign out button in the sidebar.
     Called from require_auth/require_admin so it appears on every gated page."""
-    if not _auth_enabled():
-        with st.sidebar:
-            st.caption("Demo mode")
-        return
-    email = current_user_email() or "Signed in"
     with st.sidebar:
-        st.markdown(f"**{email}**")
-        if st.button("Sign out", key="_logout_btn", use_container_width=True):
-            try:
-                sb = anon_client()
-                session = get_session()
-                if session:
-                    sb.auth.set_session(session.access_token, session.refresh_token)
-                sb.auth.sign_out()
-            except Exception:
-                pass
+        st.markdown("---")
+        if _auth_enabled():
+            email = current_user_email() or "Signed in"
+            st.markdown(f"**{email}**")
+            label = "Sign out"
+        else:
+            demo_person = st.session_state.get("demo_person")
+            name = (demo_person or {}).get("name") if isinstance(demo_person, dict) else None
+            st.markdown(f"**{name or 'Demo mode (admin)'}**")
+            label = "Reset session" if name else "Clear session"
+
+        if st.button(label, key="_logout_btn", use_container_width=True):
+            if _auth_enabled():
+                try:
+                    sb = anon_client()
+                    session = get_session()
+                    if session:
+                        sb.auth.set_session(session.access_token, session.refresh_token)
+                    sb.auth.sign_out()
+                except Exception:
+                    pass
             for k in ("sb_session", "otp_stage", "otp_email", "demo_person"):
                 st.session_state.pop(k, None)
             st.rerun()
