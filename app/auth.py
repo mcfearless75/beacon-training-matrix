@@ -220,6 +220,12 @@ def _render_sidebar_user():
     if st.session_state.get("_sidebar_rendered"):
         return
     st.session_state["_sidebar_rendered"] = True
+    # Remove the login-body class so its narrow max-width doesn't bleed into app pages.
+    # Streamlit is a SPA — body classes set during login persist until explicitly cleared.
+    components.html(
+        "<script>window.parent.document.body.classList.remove('login-active');</script>",
+        height=0,
+    )
     with st.sidebar:
         st.markdown("---")
         if _auth_enabled():
