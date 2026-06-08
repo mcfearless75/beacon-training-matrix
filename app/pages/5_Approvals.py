@@ -35,7 +35,7 @@ def _signed_url(path: str | None) -> str | None:
 pending = (
     sb.table("training_records")
     .select(
-        "id, person_id, training_type_id, completion_date, expiry_date, "
+        "id, person_id, training_type_id, completed_date, expiry_date, "
         "certificate_url, certificate_status, certificate_uploaded_at, "
         "certificate_uploaded_by"
     )
@@ -102,7 +102,7 @@ else:
                     f"**Worker:** {person_name}  \n"
                     f"**Job title:** {person.get('job_title') or '—'}  \n"
                     f"**Training:** {type_name}  \n"
-                    f"**Completed:** {rec.get('completion_date') or '—'}  \n"
+                    f"**Completed:** {rec.get('completed_date') or '—'}  \n"
                     f"**Expires:** {expiry_fmt}"
                 )
                 signed = _signed_url(rec.get("certificate_url"))
