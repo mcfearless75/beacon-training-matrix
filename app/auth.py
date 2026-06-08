@@ -186,7 +186,11 @@ def current_person() -> dict | None:
 
 def _render_sidebar_user():
     """Render signed-in user + Sign out button in the sidebar.
-    Called from require_auth/require_admin so it appears on every gated page."""
+    Called from require_auth/require_admin so it appears on every gated page.
+    Guard prevents duplicate widget keys when page scripts also call require_auth."""
+    if st.session_state.get("_sidebar_rendered"):
+        return
+    st.session_state["_sidebar_rendered"] = True
     with st.sidebar:
         st.markdown("---")
         if _auth_enabled():

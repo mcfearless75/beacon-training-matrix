@@ -22,6 +22,9 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
+# Reset the sidebar-rendered guard so _render_sidebar_user() only fires once per run.
+st.session_state["_sidebar_rendered"] = False
+
 # Check auth state before building nav (read-only — no side effects).
 # require_auth() below handles callback processing and the login form.
 _auth_on = os.getenv("AUTH_ENABLED", "false").lower() in ("1", "true", "yes", "on")
