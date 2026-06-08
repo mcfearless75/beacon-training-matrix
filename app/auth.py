@@ -61,7 +61,7 @@ def login_screen():
         <div class="login-shell">
           {logo_html}
           <h1>Beacon Training Matrix</h1>
-          <div class="login-tag">Enter your work email — we'll send a 6-digit code.</div>
+          <div class="login-tag">Enter your work email — we'll send a sign-in code.</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -76,7 +76,7 @@ def login_screen():
             label_visibility="collapsed",
             key="otp_email_input",
         )
-        if st.button("Send 6-digit code", use_container_width=True) and email:
+        if st.button("Send sign-in code", use_container_width=True) and email:
             sb = anon_client()
             try:
                 # shouldCreateUser controls whether new users are created.
@@ -92,19 +92,16 @@ def login_screen():
         target_email = st.session_state.get("otp_email", "")
         st.info(f"Code sent to **{target_email}**. Check your inbox.")
         code = st.text_input(
-            "6-digit code",
-            placeholder="123456",
-            max_chars=6,
+            "Sign-in code",
+            placeholder="Enter your code",
+            max_chars=8,
             label_visibility="collapsed",
             key="otp_code_input",
         )
-        col_a, col_b = st.columns([3, 1])
-        with col_a:
-            verify_clicked = st.button("Verify and sign in", use_container_width=True)
-        with col_b:
-            if st.button("Use different email", use_container_width=True):
-                st.session_state["otp_stage"] = "request_email"
-                st.rerun()
+        verify_clicked = st.button("Verify and sign in", use_container_width=True)
+        if st.button("← Use a different email", use_container_width=False):
+            st.session_state["otp_stage"] = "request_email"
+            st.rerun()
         if verify_clicked and code:
             sb = anon_client()
             try:
