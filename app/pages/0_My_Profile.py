@@ -17,6 +17,7 @@ from app.auth import (
     _auth_enabled,
     current_person,
     current_user_email,
+    current_user_role,
     get_session,
     require_worker_or_admin,
 )
@@ -86,10 +87,17 @@ if person is None and not _auth_enabled():
 
 if person is None:
     email = current_user_email() or "your email"
-    st.error(
-        f"No profile is linked to **{email}** yet. "
-        "Please ask your admin to invite you from the People page."
-    )
+    role = current_user_role() if _auth_enabled() else "admin"
+    if role == "admin":
+        st.info(
+            f"**{email}** is an admin account with no worker profile attached. "
+            "To see a profile here, add yourself on the **People** page first."
+        )
+    else:
+        st.error(
+            f"No profile is linked to **{email}** yet. "
+            "Please ask your admin to add you to the People page."
+        )
     st.stop()
 
 
