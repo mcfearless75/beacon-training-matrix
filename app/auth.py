@@ -99,95 +99,87 @@ def login_screen():
     load_config()  # validates env at startup; no callback redirect needed for OTP flow
     inject_css()
 
-    # Tag the body so login-only styles activate (atmospheric bg, card layout)
-    components.html(
-        """
-        <script>
-          const root = window.parent.document.body;
-          if (root && !root.classList.contains('login-active')) {
-            root.classList.add('login-active');
-          }
-        </script>
-        """,
-        height=0,
-    )
+    # Centre the login using columns — no JS body-class injection needed
+    _, col, _ = st.columns([1, 2, 1])
 
-    logo_uri = _logo_data_uri()
-    logo_html = (
-        f'<div class="login-logo-pill"><img src="{logo_uri}" alt="Beacon Risk"/></div>'
-        if logo_uri else ""
-    )
-    st.markdown(
-        f"""
-        <div class="login-shell">
-          {logo_html}
-          <div class="login-eyebrow">Beacon Risk</div>
-          <h1>Training Matrix</h1>
-          <div class="login-tag">Workforce compliance, simplified.<br>Enter your work email to sign in.</div>
-          <div class="login-divider"></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    stage = st.session_state.get("otp_stage", "request_email")
-
-    if stage == "request_email":
-        email = st.text_input(
-            "Work email",
-            placeholder="you@beaconrisk.co.uk",
-            label_visibility="collapsed",
-            key="otp_email_input",
+    with col:
+        logo_uri = _logo_data_uri()
+        logo_html = (
+            f'<div class="login-logo-pill"><img src="{logo_uri}" alt="Beacon Risk"/></div>'
+            if logo_uri else ""
         )
-        if st.button("Send sign-in code", use_container_width=True) and email:
-            sb = anon_client()
-            try:
-                sb.auth.sign_in_with_otp({"email": email})
-                st.session_state["otp_email"] = email
-                st.session_state["otp_stage"] = "verify_code"
-                st.rerun()
-            except Exception as e:
-                st.error(_friendly_otp_error(e))
-
-    elif stage == "verify_code":
-        target_email = st.session_state.get("otp_email", "")
-        st.info(f"Code sent to **{target_email}**. Check your inbox.")
-        code = st.text_input(
-            "Sign-in code",
-            placeholder="Enter your code",
-            max_chars=8,
-            label_visibility="collapsed",
-            key="otp_code_input",
+        st.markdown(
+            f"""
+            <div class="login-shell">
+              {logo_html}
+              <div class="login-eyebrow">Beacon Risk</div>
+              <h1>Training Matrix</h1>
+              <div class="login-tag">Workforce compliance, simplified.<br>
+              Enter your work email to sign in.</div>
+              <div class="login-divider"></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        verify_clicked = st.button("Verify and sign in", use_container_width=True)
-        if st.button("← Use a different email", use_container_width=False):
-            st.session_state["otp_stage"] = "request_email"
-            st.rerun()
-        if verify_clicked and code:
-            sb = anon_client()
-            try:
-                response = sb.auth.verify_otp({
-                    "email": target_email,
-                    "token": code.strip(),
-                    "type": "email",
-                })
-                session = getattr(response, "session", response)
-                st.session_state["sb_session"] = session
-                st.session_state.pop("otp_stage", None)
-                st.session_state.pop("otp_email", None)
-                # Persist refresh token so session survives container restarts
-                _save_rt_cookie(session)
-                st.rerun()
-            except Exception as e:
-                st.error(_friendly_otp_error(e))
 
-    st.markdown(
-        '<div class="login-footer">'
-        'Beacon Risk <span class="dot">·</span> H&amp;S Consultants'
-        ' <span class="dot">·</span> Secure OTP Sign-in'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+        stage = st.session_state.get("otp_stage", "request_email")
+
+        if stage == "request_email":
+            email = st.text_input(
+                "Work email",
+                placeholder="you@beaconrisk.co.uk",
+                label_visibility="collapsed",
+                key="otp_email_input",
+            )
+            if st.button("Send sign-in code", use_container_width=True, type="primary") and email:
+                sb = anon_client()
+                try:
+                    sb.auth.sign_in_with_otp({"email": email})
+                    st.session_state["otp_email"] = email
+                    st.session_state["otp_stage"] = "verify_code"
+                    st.rerun()
+                except Exception as e:
+                    st.error(_friendly_otp_error(e))
+
+        elif stage == "verify_code":
+            target_email = st.session_state.get("otp_email", "")
+            st.info(f"Code sent to **{target_email}**. Check your inbox.")
+            code = st.text_input(
+                "Sign-in code",
+                placeholder="Enter your 8-digit code",
+                max_chars=8,
+                label_visibility="collapsed",
+                key="otp_code_input",
+            )
+            verify_clicked = st.button("Verify and sign in", use_container_width=True, type="primary")
+            if st.button("← Use a different email", use_container_width=True):
+                st.session_state["otp_stage"] = "request_email"
+                st.rerun()
+            if verify_clicked and code:
+                sb = anon_client()
+                try:
+                    response = sb.auth.verify_otp({
+                        "email": target_email,
+                        "token": code.strip(),
+                        "type": "email",
+                    })
+                    session = getattr(response, "session", response)
+                    st.session_state["sb_session"] = session
+                    st.session_state.pop("otp_stage", None)
+                    st.session_state.pop("otp_email", None)
+                    # Persist refresh token so session survives container restarts
+                    _save_rt_cookie(session)
+                    st.rerun()
+                except Exception as e:
+                    st.error(_friendly_otp_error(e))
+
+        st.markdown(
+            '<div class="login-footer">'
+            'Beacon Risk <span class="dot">·</span> H&amp;S Consultants'
+            ' <span class="dot">·</span> Secure OTP Sign-in'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def handle_callback():

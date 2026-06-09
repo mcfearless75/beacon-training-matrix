@@ -149,198 +149,51 @@ BRAND_CSS = """
   .kpi-tile.month .value {color: #D97706;}
   .kpi-tile.quarter .value {color: #16A34A;}
 
-  /* ===== Login experience — dark prestige / enterprise SaaS ===== */
-  .login-active {
-    background:
-      radial-gradient(ellipse 900px 600px at 85% -5%, rgba(244,132,95,0.28), transparent 55%),
-      radial-gradient(ellipse 600px 400px at -5% 95%, rgba(244,132,95,0.12), transparent 55%),
-      linear-gradient(160deg, #0D1526 0%, #080E1C 55%, #0A1020 100%) !important;
-    min-height: 100vh;
-  }
-  .login-active [data-testid="stAppViewContainer"] {background: transparent !important;}
-  .login-active .block-container {
-    max-width: 460px !important;
-    padding-top: 5vh !important;
-    padding-bottom: 5vh !important;
-  }
-
-  /* Card — clean white, sharp shadow */
+  /* ===== Login — clean centred card, no JS body class ===== */
+  /* Card sits in the middle column — always centred, always works */
   .login-shell {
-    background: #FFFFFF;
-    border-radius: 20px 20px 0 0;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-bottom: none;
-    padding: 44px 40px 28px 40px;
+    background: var(--sf);
+    border-radius: 16px;
+    border: 1px solid var(--bd);
+    padding: 44px 36px 28px 36px;
     text-align: center;
-    box-shadow:
-      0 32px 80px rgba(0,0,0,0.55),
-      0 8px 24px rgba(0,0,0,0.35),
-      0 0 0 1px rgba(255,255,255,0.04);
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+    position: relative; overflow: hidden;
+    margin-bottom: 6px;
   }
-  /* Top accent bar */
+  /* Thin orange accent bar */
   .login-shell::before {
-    content: "";
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #E5663C 0%, #F4845F 45%, #FFB84D 100%);
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--or2) 0%, var(--or) 50%, #FFB84D 100%);
   }
-  /* Subtle inner glow */
-  .login-shell::after {
-    content: "";
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(244,132,95,0.07), transparent 70%);
-    pointer-events: none;
-  }
-
-  /* Logo container */
+  /* Logo — clean, no pill background */
   .login-logo-pill {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: #F6F8FA;
-    border: 1px solid #E8EBF0;
-    border-radius: 14px;
-    padding: 14px 32px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 22px;
   }
-  .login-logo-pill img {height: 48px; width: auto; display: block;}
-
-  /* Product eyebrow */
+  .login-logo-pill img {height: 56px; width: auto; display: block;}
+  /* Eyebrow + heading + tagline */
   .login-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #F4845F;
-    margin-bottom: 10px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--or); margin-bottom: 10px;
   }
-
   .login-shell h1 {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    color: #0D1B2A;
-    letter-spacing: -0.03em;
-    font-weight: 800;
-    line-height: 1.1;
-    text-align: center;
+    font-size: 1.85rem; margin-bottom: 10px; color: var(--t0);
+    letter-spacing: -0.03em; font-weight: 800; line-height: 1.1;
   }
   .login-shell .login-tag {
-    color: #6B7B95;
-    margin-bottom: 6px;
-    font-size: 0.92rem;
-    line-height: 1.5;
-    text-align: center;
-    font-weight: 400;
+    color: var(--mu); font-size: 0.9rem; line-height: 1.6; font-weight: 400; margin-bottom: 0;
   }
   .login-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #E8EBF0 30%, #E8EBF0 70%, transparent);
-    margin: 20px 0 4px 0;
+    height: 1px; margin: 22px 0 0 0;
+    background: linear-gradient(90deg, transparent, var(--bd) 25%, var(--bd) 75%, transparent);
   }
-
-  /* Card mid-section — Streamlit widget area */
-  .login-active [data-testid="stTextInput"] {
-    margin-top: 0 !important;
-    background: white;
-    border-left: 1px solid #E8EBF0;
-    border-right: 1px solid #E8EBF0;
-    padding: 4px 36px 0 36px;
-  }
-  .login-active [data-testid="stTextInput"] input {
-    background: #F8FAFC !important;
-    border: 1.5px solid #DDE2EC !important;
-    border-radius: 10px !important;
-    padding: 13px 16px !important;
-    font-size: 0.97rem !important;
-    font-weight: 500 !important;
-    color: #1A2235 !important;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .login-active [data-testid="stTextInput"] input:focus {
-    border-color: #F4845F !important;
-    box-shadow: 0 0 0 3px rgba(244,132,95,0.15) !important;
-    background: #FFFFFF !important;
-  }
-  .login-active [data-testid="stTextInput"] input::placeholder {
-    color: #A8B3C8 !important;
-    font-weight: 400 !important;
-  }
-
-  /* Button wrapper — part of card */
-  .login-active [data-testid="stVerticalBlock"] > div:has(> .stButton),
-  .login-active [data-testid="stHorizontalBlock"] {
-    background: white;
-    border-left: 1px solid #E8EBF0;
-    border-right: 1px solid #E8EBF0;
-    padding: 10px 36px 6px 36px;
-  }
-
-  /* Primary CTA button */
-  .login-active .stButton > button {
-    background: #E86038 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 0.8rem 1.4rem !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    letter-spacing: 0.01em !important;
-    box-shadow: 0 4px 16px rgba(232,96,56,0.38), 0 1px 0 rgba(255,255,255,0.12) inset !important;
-    transition: transform 0.07s ease, box-shadow 0.15s ease, background 0.15s ease !important;
-    position: relative !important;
-  }
-  .login-active .stButton > button:hover {
-    background: #D4562E !important;
-    box-shadow: 0 6px 20px rgba(232,96,56,0.48), 0 1px 0 rgba(255,255,255,0.12) inset !important;
-    transform: translateY(-1px) !important;
-  }
-  .login-active .stButton > button:active {
-    transform: translateY(0px) !important;
-    box-shadow: 0 2px 8px rgba(232,96,56,0.30) !important;
-  }
-
-  /* Back link / secondary button */
-  .login-active [data-testid="column"]:last-child .stButton > button,
-  .login-active .stButton:not(:first-of-type) > button {
-    background: transparent !important;
-    color: #6B7B95 !important;
-    border: 1.5px solid #DDE2EC !important;
-    box-shadow: none !important;
-    font-weight: 500 !important;
-  }
-  .login-active [data-testid="column"]:last-child .stButton > button:hover,
-  .login-active .stButton:not(:first-of-type) > button:hover {
-    background: #F4F6FA !important;
-    color: #3D4E6A !important;
-    transform: none !important;
-  }
-
-  /* Alerts inside login */
-  .login-active [data-testid="stAlert"] {
-    margin-left: 36px; margin-right: 36px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    background: white;
-    border-left: 1px solid #E8EBF0 !important;
-    border-right: 1px solid #E8EBF0 !important;
-  }
-
-  /* Card footer */
+  /* Footer — slim, centred, below card */
   .login-footer {
-    background: #F8FAFC;
-    border-radius: 0 0 20px 20px;
-    border: 1px solid #E8EBF0;
-    border-top: 1px solid #EEF1F7;
-    padding: 14px 32px 18px 32px;
-    text-align: center;
-    color: #9BAABB;
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 600;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35);
+    text-align: center; padding: 18px 0 8px 0;
+    color: var(--su); font-size: 0.72rem;
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
   }
-  .login-footer .dot {color: #F4845F; margin: 0 6px; opacity: 0.7;}
+  .login-footer .dot {color: var(--or); margin: 0 6px; opacity: 0.55;}
 
   /* ===== 6. Buttons (outside login) ===== */
   .stButton > button {
@@ -676,8 +529,7 @@ BRAND_CSS = """
     .kpi-grid {grid-template-columns: repeat(2, 1fr); gap: 10px;}
     .kpi-tile {padding: 14px 16px;}
     .kpi-tile .value {font-size: 1.85rem;}
-    .login-shell {margin: 4vh 12px 0 12px; padding: 32px 24px 28px 24px;}
-    .login-logo-pill {padding: 14px 28px;}
+    .login-shell {padding: 32px 24px 28px 24px;}
     .login-logo-pill img {height: 44px;}
     .login-shell h1 {font-size: 1.4rem;}
   }
@@ -693,8 +545,7 @@ BRAND_CSS = """
     .kpi-tile .label {font-size: 0.7rem;}
     .kpi-tile .value {font-size: 1.65rem;}
     .kpi-tile .sub {font-size: 0.75rem;}
-    .login-shell {margin: 2vh 10px 0 10px; padding: 28px 20px 24px 20px; border-radius: 16px;}
-    .login-logo-pill {padding: 12px 24px;}
+    .login-shell {padding: 28px 20px 24px 20px; border-radius: 16px;}
     .login-logo-pill img {height: 38px;}
     .login-shell h1 {font-size: 1.25rem;}
     .login-shell .login-tag {font-size: 0.85rem; margin-bottom: 20px;}
