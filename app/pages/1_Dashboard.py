@@ -1,99 +1,158 @@
 from datetime import date
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import help_box, inject_css, kpi_row, page_header
+from app.branding import inject_css, kpi_row, page_header
 from beacon.db import anon_client
 from beacon.reminders import classify_window, compliance_summary
 
 require_auth()
 inject_css()
-page_header(
-    "Dashboard",
-    "Live training-expiry view across all active people and training types.",
-)
+page_header("Dashboard", "Workforce compliance at a glance.")
 
 sb = anon_client()
 records_raw = sb.rpc("get_active_training_records").execute().data or []
 
 records = []
 for r in records_raw:
-    if r["expiry_date"]:
-        records.append({**r, "expiry_date": date.fromisoformat(r["expiry_date"])})
-    else:
-        records.append({**r, "expiry_date": None})
+    expiry = date.fromisoformat(r["expiry_date"]) if r["expiry_date"] else None
+    records.append({**r, "expiry_date": expiry})
 
 today = date.today()
 summary = compliance_summary(records, today=today)
 score = summary["score"]
-
-# ===== Compliance score hero =====
-if score >= 90:
-    score_colour = "#16A34A"
-    score_label = "Excellent"
-    score_msg = "Your workforce is in great shape — nothing urgent."
-elif score >= 75:
-    score_colour = "#16A34A"
-    score_label = "Good"
-    score_msg = "Most records are in date. A few need attention soon."
-elif score >= 50:
-    score_colour = "#D97706"
-    score_label = "Attention"
-    score_msg = "Several records need renewing in the next week."
-else:
-    score_colour = "#DC2626"
-    score_label = "At risk"
-    score_msg = "Significant compliance gaps — review immediately."
-
-# Build the bar visual (4 segments, weighted by counts)
 total = summary["total"] or 1
-seg_widths = [
-    ("#DC2626", summary["expired"] / total * 100),
-    ("#EA580C", summary["week"] / total * 100),
-    ("#D97706", summary["month"] / total * 100),
-    ("#16A34A", (summary["quarter"] + summary["safe"]) / total * 100),
+
+# ── score thresholds
+if score >= 90:
+    score_colour, score_label = "#16A34A", "Excellent"
+elif score >= 75:
+    score_colour, score_label = "#16A34A", "Good"
+elif score >= 50:
+    score_colour, score_label = "#D97706", "Attention"
+else:
+    score_colour, score_label = "#DC2626", "At Risk"
+
+# ── Gauge chart
+gauge_fig = go.Figure(go.Indicator(
+    mode="gauge+number",
+    value=score,
+    number={
+        "suffix": "%",
+        "font": {"size": 56, "color": score_colour, "family": "Inter, sans-serif"},
+        "valueformat": ".0f",
+    },
+    gauge={
+        "axis": {
+            "range": [0, 100],
+            "tickwidth": 1,
+            "tickcolor": "#CBD5E1",
+            "tickfont": {"size": 10, "color": "#94A3B8"},
+            "dtick": 25,
+        },
+        "bar": {"color": score_colour, "thickness": 0.3},
+        "bgcolor": "#F8FAFC",
+        "borderwidth": 1,
+        "bordercolor": "#E2E8F0",
+        "steps": [
+            {"range": [0,  50],  "color": "rgba(220,38,38,0.07)"},
+            {"range": [50, 75],  "color": "rgba(217,119,6,0.06)"},
+            {"range": [75, 90],  "color": "rgba(22,163,74,0.04)"},
+            {"range": [90, 100], "color": "rgba(22,163,74,0.09)"},
+        ],
+        "threshold": {
+            "line": {"color": score_colour, "width": 3},
+            "thickness": 0.78,
+            "value": score,
+        },
+    },
+    title={
+        "text": (
+            f"<b style='color:{score_colour}'>{score_label}</b><br>"
+            f"<span style='font-size:12px;color:#94A3B8'>Compliance Score</span>"
+        ),
+        "font": {"family": "Inter, sans-serif", "size": 18},
+    },
+))
+gauge_fig.update_layout(
+    paper_bgcolor="white",
+    font={"color": "#334155", "family": "Inter, sans-serif"},
+    height=270,
+    margin=dict(l=20, r=20, t=60, b=10),
+)
+
+# ── Stacked distribution bar
+dist_data = [
+    ("Expired",   summary["expired"],  "#DC2626"),
+    ("≤ 7 days",  summary["week"],     "#EA580C"),
+    ("≤ 30 days", summary["month"],    "#D97706"),
+    ("≤ 90 days", summary["quarter"],  "#3B82F6"),
+    ("In date",   summary["safe"],     "#16A34A"),
 ]
-bar_html = "".join(
-    f'<div style="width:{w:.2f}%; background:{c};"></div>' for c, w in seg_widths
+dist_fig = go.Figure()
+for label, val, colour in dist_data:
+    dist_fig.add_trace(go.Bar(
+        name=label,
+        x=[val],
+        y=[""],
+        orientation="h",
+        marker_color=colour,
+        marker_line_width=0,
+        text=f"<b>{val}</b>" if val > 0 else "",
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont={"color": "white", "size": 11, "family": "Inter, sans-serif"},
+        hovertemplate=f"<b>{label}</b>: {val}<extra></extra>",
+    ))
+dist_fig.update_layout(
+    barmode="stack",
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    height=68,
+    margin=dict(l=0, r=0, t=0, b=40),
+    legend=dict(
+        orientation="h",
+        y=-0.65,
+        x=0,
+        font={"size": 11, "color": "#64748B", "family": "Inter, sans-serif"},
+        bgcolor="rgba(0,0,0,0)",
+        borderwidth=0,
+        itemsizing="constant",
+    ),
+    xaxis={"showgrid": False, "showticklabels": False, "zeroline": False, "showline": False},
+    yaxis={"showgrid": False, "showticklabels": False, "showline": False},
+    showlegend=True,
 )
 
-hero_html = (
-    '<div class="compliance-hero">'
-    '<div class="ch-left">'
-    f'<div class="ch-score" style="color:{score_colour};">{score}<span>%</span></div>'
-    f'<div class="ch-label">Compliance score</div>'
-    '</div>'
-    '<div class="ch-right">'
-    f'<div class="ch-status" style="color:{score_colour};">{score_label}</div>'
-    f'<div class="ch-msg">{score_msg}</div>'
-    f'<div class="ch-bar">{bar_html}</div>'
-    '<div class="ch-bar-key">'
-    f'<span><b style="color:#DC2626;">●</b> Expired {summary["expired"]}</span>'
-    f'<span><b style="color:#EA580C;">●</b> ≤7d {summary["week"]}</span>'
-    f'<span><b style="color:#D97706;">●</b> ≤30d {summary["month"]}</span>'
-    f'<span><b style="color:#16A34A;">●</b> In date {summary["quarter"] + summary["safe"]}</span>'
-    '</div></div></div>'
-)
-st.markdown(hero_html, unsafe_allow_html=True)
+# ── Layout: gauge | KPI tiles + distribution
+col_gauge, col_kpis = st.columns([1, 1.55])
 
-help_box(
-    "What you're looking at",
-    "Your <b>compliance score</b> is the percentage of training records that are not "
-    "expired and not due within 7 days. The bar shows the distribution. Tiles below "
-    "break it down by urgency. The table lists every record that needs attention.",
-)
+with col_gauge:
+    with st.container(border=True):
+        st.plotly_chart(
+            gauge_fig, use_container_width=True, config={"displayModeBar": False}
+        )
 
-# ===== KPI tiles =====
-kpi_row([
-    {"label": "Expired", "value": summary["expired"], "sub": "Overdue — action required", "tone": "expired"},
-    {"label": "≤ 7 days", "value": summary["week"], "sub": "Renew this week", "tone": "week"},
-    {"label": "≤ 30 days", "value": summary["month"], "sub": "Plan renewal", "tone": "month"},
-    {"label": "≤ 90 days", "value": summary["quarter"], "sub": "On the horizon", "tone": "quarter"},
-])
+with col_kpis:
+    kpi_row([
+        {"label": "Expired",   "value": summary["expired"],  "sub": "Overdue — act now",   "tone": "expired"},
+        {"label": "≤ 7 days",  "value": summary["week"],     "sub": "Renew this week",     "tone": "week"},
+        {"label": "≤ 30 days", "value": summary["month"],    "sub": "Plan ahead",          "tone": "month"},
+        {"label": "≤ 90 days", "value": summary["quarter"],  "sub": "On the horizon",      "tone": "quarter"},
+    ])
+    st.markdown(
+        "<p style='font-size:0.7rem;font-weight:700;text-transform:uppercase;"
+        "letter-spacing:0.1em;color:#94A3B8;margin:14px 0 2px;'>Record Distribution</p>",
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(
+        dist_fig, use_container_width=True, config={"displayModeBar": False}
+    )
 
-# ===== Table of attention items =====
+# ── Attention table
 rows = []
 for r in records:
     if not r["expiry_date"]:
@@ -102,17 +161,27 @@ for r in records:
     if window is None:
         continue
     rows.append({
-        "Person": r["person_name"],
+        "Person":   r["person_name"],
         "Training": r["training_name"],
-        "Expires": r["expiry_date"],
-        "Status": {"expired": "Expired", "7": "≤ 7 days", "30": "≤ 30 days", "90": "≤ 90 days"}[window],
+        "Expires":  r["expiry_date"],
+        "Status":   {
+            "expired": "Expired",
+            "7":       "≤ 7 days",
+            "30":      "≤ 30 days",
+            "90":      "≤ 90 days",
+        }[window],
     })
 
 if not rows:
-    st.success("Nothing expiring in the next 90 days. You're fully compliant.")
+    st.success("Nothing expiring in the next 90 days — fully compliant.")
 else:
     df = pd.DataFrame(rows).sort_values("Expires").reset_index(drop=True)
-    st.markdown(f"#### {len(df)} record{'s' if len(df) != 1 else ''} need attention")
+    n = len(df)
+    st.markdown(
+        f"<h4 style='margin:28px 0 8px;color:var(--t1);'>"
+        f"{n} record{'s' if n != 1 else ''} need attention</h4>",
+        unsafe_allow_html=True,
+    )
     st.dataframe(
         df,
         use_container_width=True,
