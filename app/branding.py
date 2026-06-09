@@ -6,48 +6,99 @@ import streamlit as st
 LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
 
 BRAND_CSS = """
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* Hide Streamlit chrome we don't want in a client demo */
+  /* ===== 0. Streamlit chrome ===== */
   #MainMenu {visibility: hidden;}
   footer {visibility: hidden;}
   header[data-testid="stHeader"] {background: transparent;}
 
-  /* Global font upgrade */
+  /* ===== 1. Design tokens ===== */
+  :root {
+    --or:  #E86038;
+    --or2: #C94E27;
+    --olt: #FEF0EA;
+    --omd: #FDD5C2;
+    --t0:  #0F172A;
+    --t1:  #1E293B;
+    --t2:  #334155;
+    --mu:  #64748B;
+    --su:  #94A3B8;
+    --bd:  #E2E8F0;
+    --bd2: #CBD5E1;
+    --sf:  #FFFFFF;
+    --bg:  #F4F7FC;
+    --nav: #0D1526;
+  }
+
+  /* ===== 2. Base ===== */
   html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  .block-container {padding-top: 2rem; padding-bottom: 4rem; max-width: 1280px;}
+  [data-testid="stAppViewContainer"] {background: var(--bg);}
 
-  /* Tighten default padding so content has more breathing room */
-  .block-container {padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1280px;}
+  /* ===== 3. Headings ===== */
+  h2 {font-size: 1.2rem !important; font-weight: 700 !important; color: var(--t0) !important; letter-spacing: -0.015em !important;}
+  h3 {font-size: 1rem !important; font-weight: 600 !important; color: var(--t0) !important; letter-spacing: -0.01em !important;}
+  [data-testid="stMarkdownContainer"] hr {border: none !important; border-top: 1px solid var(--bd) !important; margin: 18px 0 !important;}
 
-  /* App-level surface */
-  [data-testid="stAppViewContainer"] {background: #FAFBFC;}
+  /* ===== 4. Sidebar — dark navy ===== */
+  [data-testid="stSidebar"] {background: var(--nav) !important; border-right: none !important;}
+  [data-testid="stSidebar"] > div:first-child {padding-top: 0 !important;}
 
-  /* Brand header — modern SaaS: light surface, eyebrow accent, no gradient slab */
+  [data-testid="stSidebarNav"] {padding: 8px 0 4px 0;}
+  [data-testid="stSidebarNav"] a {
+    border-radius: 8px !important; margin: 2px 10px !important;
+    padding: 9px 12px !important; transition: background 0.15s;
+  }
+  [data-testid="stSidebarNav"] a:hover {background: rgba(255,255,255,0.08) !important;}
+  [data-testid="stSidebarNav"] a span {color: #94A3B8 !important; font-weight: 500 !important; font-size: 0.88rem !important;}
+  [data-testid="stSidebarNav"] a:hover span {color: #E2E8F0 !important;}
+  [data-testid="stSidebarNav"] a[aria-current="page"] {background: rgba(232,96,56,0.18) !important; border: none !important; padding-left: 12px !important;}
+  [data-testid="stSidebarNav"] a[aria-current="page"] span {color: #FBBF9A !important; font-weight: 600 !important;}
+
+  [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
+  [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+    color: #E2E8F0 !important; font-size: 0.78rem !important;
+    font-weight: 700 !important; letter-spacing: 0.1em !important; text-transform: uppercase !important;
+  }
+  [data-testid="stSidebar"] p,
+  [data-testid="stSidebar"] .stMarkdown {color: #94A3B8 !important; font-size: 0.88rem !important;}
+  [data-testid="stSidebar"] strong {color: #CBD5E1 !important; font-weight: 600 !important;}
+  [data-testid="stSidebar"] hr {border-color: rgba(255,255,255,0.08) !important; margin: 10px 16px !important;}
+
+  [data-testid="stSidebar"] .stButton > button {
+    background: rgba(255,255,255,0.06) !important; color: #94A3B8 !important;
+    border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 8px !important;
+    font-size: 0.85rem !important; font-weight: 500 !important;
+    padding: 0.4rem 0.9rem !important; box-shadow: none !important;
+    transition: background 0.15s, color 0.15s !important;
+  }
+  [data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(255,255,255,0.12) !important; color: #E2E8F0 !important; transform: none !important;
+  }
+
+  /* ===== 5. Brand page header ===== */
   .brand-header {
-    padding: 22px 4px 18px 4px;
-    margin: 0 0 22px 0;
-    border-bottom: 1px solid #ECEEF2;
-    background: transparent;
-    position: relative;
+    padding: 24px 4px 20px 4px; margin: 0 0 24px 0;
+    border-bottom: 1px solid var(--bd); background: transparent; position: relative;
   }
   .brand-header .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
-    font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: #F4845F; margin-bottom: 8px;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--or); margin-bottom: 8px;
   }
   .brand-header .eyebrow::before {
     content: ""; display: inline-block; width: 6px; height: 6px;
-    background: #F4845F; border-radius: 50%;
+    background: var(--or); border-radius: 50%;
   }
-  .brand-header h1 {
-    color: #0F172A; margin: 0;
-    font-size: 1.65rem; font-weight: 700; letter-spacing: -0.022em;
-  }
-  .brand-header .tagline {color: #64748B; font-size: 0.95rem; margin-top: 6px; font-weight: 400;}
+  .brand-header h1 {color: var(--t0); margin: 0; font-size: 1.65rem; font-weight: 700; letter-spacing: -0.022em;}
+  .brand-header .tagline {color: var(--mu); font-size: 0.9rem; margin-top: 6px; font-weight: 400;}
 
   /* KPI tiles — modern, spacious, hover lift */
   .kpi-grid {
@@ -56,7 +107,7 @@ BRAND_CSS = """
   }
   .kpi-tile {
     background: white;
-    border: 1px solid #ECEEF2;
+    border: 1px solid var(--bd);
     border-radius: 14px;
     padding: 18px 20px 16px 20px;
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s, border-color 0.18s;
@@ -291,74 +342,137 @@ BRAND_CSS = """
   }
   .login-footer .dot {color: #F4845F; margin: 0 6px; opacity: 0.7;}
 
-  /* Buttons */
+  /* ===== 6. Buttons (outside login) ===== */
   .stButton > button {
-    background: #0E5FFF; color: white; border: none;
-    border-radius: 10px; padding: 0.6rem 1.4rem;
-    font-weight: 600; font-size: 0.95rem;
-    transition: background 0.15s ease, transform 0.05s ease;
+    background: var(--sf) !important; color: var(--t0) !important;
+    border: 1px solid var(--bd) !important; border-radius: 8px !important;
+    padding: 0.5rem 1.1rem !important; font-weight: 500 !important; font-size: 0.9rem !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s !important;
   }
-  .stButton > button:hover {background: #0A3FB5; color: white;}
-  .stButton > button:active {transform: translateY(1px);}
+  .stButton > button:hover {
+    background: #F8FAFC !important; border-color: var(--bd2) !important;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.08) !important;
+  }
+  .stButton > button:active {transform: translateY(1px) !important;}
+  .stButton > button[kind="primary"] {
+    background: var(--or) !important; color: white !important;
+    border-color: transparent !important; box-shadow: 0 4px 12px rgba(232,96,56,0.28) !important;
+  }
+  .stButton > button[kind="primary"]:hover {
+    background: var(--or2) !important; box-shadow: 0 6px 16px rgba(232,96,56,0.36) !important;
+  }
 
-  /* Dataframe + tables look cleaner */
-  [data-testid="stDataFrame"] {border-radius: 10px; overflow: hidden;}
+  /* ===== 7. Forms ===== */
+  [data-testid="stTextInput"] label, [data-testid="stTextArea"] label,
+  [data-testid="stSelectbox"] label, [data-testid="stMultiSelect"] label,
+  [data-testid="stNumberInput"] label, .stDateInput label, .stSlider label {
+    font-size: 0.82rem !important; font-weight: 600 !important;
+    color: var(--t2) !important; letter-spacing: 0.01em !important;
+  }
+  [data-testid="stTextInput"] input,
+  [data-testid="stNumberInput"] input,
+  [data-testid="stTextArea"] textarea {
+    background: var(--sf) !important; border: 1.5px solid var(--bd) !important;
+    border-radius: 8px !important; padding: 10px 13px !important;
+    font-size: 0.9rem !important; color: var(--t0) !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+  [data-testid="stTextInput"] input:focus,
+  [data-testid="stNumberInput"] input:focus,
+  [data-testid="stTextArea"] textarea:focus {
+    border-color: var(--or) !important; box-shadow: 0 0 0 3px rgba(232,96,56,0.12) !important;
+  }
+  [data-testid="stTextInput"] input::placeholder,
+  [data-testid="stTextArea"] textarea::placeholder {color: #A8B3C8 !important;}
+  [data-testid="stSelectbox"] > div > div {
+    background: var(--sf) !important; border: 1.5px solid var(--bd) !important;
+    border-radius: 8px !important; box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+  }
+  [data-testid="stSelectbox"] > div > div:focus-within {
+    border-color: var(--or) !important; box-shadow: 0 0 0 3px rgba(232,96,56,0.12) !important;
+  }
+  [data-testid="stMultiSelect"] > div > div {
+    background: var(--sf) !important; border: 1.5px solid var(--bd) !important;
+    border-radius: 8px !important; box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+  }
+  [data-testid="stMultiSelect"] > div > div:focus-within {
+    border-color: var(--or) !important; box-shadow: 0 0 0 3px rgba(232,96,56,0.12) !important;
+  }
+  [data-testid="stMultiSelect"] span[data-baseweb="tag"] {
+    background: var(--olt) !important; border: 1px solid var(--omd) !important;
+    color: #9A3015 !important; border-radius: 5px !important;
+    font-weight: 500 !important; font-size: 0.78rem !important;
+  }
+  [data-testid="stFileUploaderDropzone"] {
+    border: 2px dashed var(--bd2) !important; border-radius: 12px !important;
+    background: var(--sf) !important; transition: border-color 0.15s, background 0.15s !important;
+  }
+  [data-testid="stFileUploaderDropzone"]:hover {
+    border-color: var(--or) !important; background: var(--olt) !important;
+  }
 
-  /* Sidebar — modern SaaS feel */
-  [data-testid="stSidebar"] {
-    background: #FFFFFF !important;
-    border-right: 1px solid #ECEEF2;
+  /* ===== 8. Tabs ===== */
+  .stTabs [data-baseweb="tab-list"] {
+    background: transparent !important; gap: 2px !important;
+    border-bottom: 2px solid var(--bd) !important;
+    padding-bottom: 0 !important; margin-bottom: 20px !important;
   }
-  [data-testid="stSidebar"] > div:first-child {padding-top: 16px;}
-  [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h3 {
-    font-size: 0.95rem; color: #0F172A; font-weight: 600;
-    letter-spacing: -0.005em;
+  .stTabs [data-baseweb="tab"] {
+    background: transparent !important; border: none !important;
+    padding: 8px 18px !important; border-radius: 6px 6px 0 0 !important;
+    color: var(--mu) !important; font-weight: 500 !important; font-size: 0.9rem !important;
+    transition: color 0.15s, background 0.15s !important; margin-bottom: -2px !important;
   }
-  /* Sidebar nav links — make Streamlit's auto-generated page list less utilitarian */
-  [data-testid="stSidebarNav"] {padding-top: 4px;}
-  [data-testid="stSidebarNav"] a {
-    border-radius: 8px !important;
-    margin: 2px 6px !important;
-    padding: 8px 12px !important;
-    transition: background 0.12s ease, color 0.12s ease;
+  .stTabs [data-baseweb="tab"]:hover {background: #F1F5F9 !important; color: var(--t0) !important;}
+  .stTabs [aria-selected="true"][data-baseweb="tab"] {
+    color: var(--or) !important; font-weight: 600 !important;
+    background: transparent !important; border-bottom: 2px solid var(--or) !important;
   }
-  [data-testid="stSidebarNav"] a:hover {background: #F1F5F9 !important;}
-  [data-testid="stSidebarNav"] a span {color: #475569 !important; font-weight: 500;}
-  [data-testid="stSidebarNav"] a[aria-current="page"] {
-    background: linear-gradient(90deg, rgba(244,132,95,0.10), transparent) !important;
-    border-left: 3px solid #F4845F !important;
-    padding-left: 9px !important;
-  }
-  [data-testid="stSidebarNav"] a[aria-current="page"] span {color: #0F172A !important; font-weight: 600;}
+  .stTabs [data-baseweb="tab-highlight"] {background: var(--or) !important; height: 2px !important;}
+  .stTabs [data-baseweb="tab-panel"] {padding: 0 !important;}
 
-  /* Tables — cleaner, less hospital-form */
+  /* ===== 9. Metrics ===== */
+  [data-testid="stMetric"] {
+    background: var(--sf) !important; border: 1px solid var(--bd) !important;
+    border-radius: 16px !important; padding: 18px 20px !important;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06) !important;
+    transition: box-shadow 0.18s !important;
+  }
+  [data-testid="stMetric"]:hover {box-shadow: 0 8px 20px -4px rgba(15,23,42,0.12) !important;}
+  [data-testid="stMetricLabel"] {
+    font-size: 0.74rem !important; font-weight: 600 !important;
+    letter-spacing: 0.05em !important; text-transform: uppercase !important; color: var(--mu) !important;
+  }
+  [data-testid="stMetricValue"] {
+    font-size: 2rem !important; font-weight: 700 !important;
+    letter-spacing: -0.02em !important; color: var(--t0) !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  /* ===== 10. Progress bars ===== */
+  [data-testid="stProgress"] > div > div {border-radius: 999px !important; background: var(--bd) !important;}
+  [data-testid="stProgress"] > div > div > div {
+    background: linear-gradient(90deg, var(--or), #FBB17A) !important; border-radius: 999px !important;
+  }
+
+  /* ===== 11. Tables ===== */
   [data-testid="stDataFrame"] {
-    border-radius: 12px !important;
-    border: 1px solid #ECEEF2 !important;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    border-radius: 12px !important; border: 1px solid var(--bd) !important;
+    overflow: hidden !important; box-shadow: 0 1px 3px rgba(15,23,42,0.05) !important;
   }
 
-  /* Buttons (non-login) — neutral by default with brand accent on primary */
-  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button {
-    background: white; color: #0F172A;
-    border: 1px solid #E2E8F0; border-radius: 8px;
-    padding: 0.5rem 1.1rem; font-weight: 500; font-size: 0.9rem;
-    transition: background 0.12s, border-color 0.12s, transform 0.05s;
-    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
-  }
-  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button:hover {
-    background: #F8FAFC; border-color: #CBD5E1;
-  }
-  [data-testid="stAppViewContainer"]:not(.login-active) .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #F4845F 0%, #E5663C 100%); color: white; border: none;
-    box-shadow: 0 4px 12px rgba(244,132,95,0.28);
-  }
+  /* ===== 12. Scrollbar ===== */
+  ::-webkit-scrollbar {width: 6px; height: 6px;}
+  ::-webkit-scrollbar-track {background: transparent;}
+  ::-webkit-scrollbar-thumb {background: #CBD5E1; border-radius: 999px;}
+  ::-webkit-scrollbar-thumb:hover {background: #94A3B8;}
 
   /* Profile page */
   .profile-card {
     display: flex; align-items: center; gap: 20px;
-    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    background: white; border: 1px solid var(--bd); border-radius: 16px;
     padding: 24px 28px; margin-bottom: 18px;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
   }
@@ -377,7 +491,7 @@ BRAND_CSS = """
     margin-bottom: 22px;
   }
   .profile-stat {
-    background: white; border: 1px solid #ECEEF2; border-radius: 12px;
+    background: white; border: 1px solid var(--bd); border-radius: 12px;
     padding: 16px 18px;
   }
   .profile-stat .ps-value {
@@ -395,7 +509,7 @@ BRAND_CSS = """
 
   /* Timeline (renewal calendar) */
   .timeline-card {
-    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    background: white; border: 1px solid var(--bd); border-radius: 16px;
     padding: 24px 28px 20px 28px; margin-bottom: 22px;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
   }
@@ -438,7 +552,7 @@ BRAND_CSS = """
   .compliance-hero {
     display: grid; grid-template-columns: minmax(180px, 240px) 1fr;
     gap: 28px; align-items: center;
-    background: white; border: 1px solid #ECEEF2; border-radius: 18px;
+    background: white; border: 1px solid var(--bd); border-radius: 18px;
     padding: 28px 32px; margin-bottom: 22px;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
     position: relative; overflow: hidden;
@@ -448,7 +562,7 @@ BRAND_CSS = """
     background: linear-gradient(90deg, #F4845F 0%, #FFB74D 50%, #F4845F 100%);
   }
   .compliance-hero .ch-left {
-    border-right: 1px solid #ECEEF2; padding-right: 28px;
+    border-right: 1px solid var(--bd); padding-right: 28px;
   }
   .compliance-hero .ch-score {
     font-size: 4.5rem; font-weight: 800; line-height: 1;
@@ -478,7 +592,7 @@ BRAND_CSS = """
 
   @media (max-width: 700px) {
     .compliance-hero {grid-template-columns: 1fr; gap: 18px; padding: 22px;}
-    .compliance-hero .ch-left {border-right: none; border-bottom: 1px solid #ECEEF2; padding-right: 0; padding-bottom: 18px;}
+    .compliance-hero .ch-left {border-right: none; border-bottom: 1px solid var(--bd); padding-right: 0; padding-bottom: 18px;}
     .compliance-hero .ch-score {font-size: 3.5rem;}
   }
 
@@ -486,7 +600,7 @@ BRAND_CSS = """
   .legend-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
     padding: 10px 16px; margin-bottom: 18px;
-    background: white; border: 1px solid #ECEEF2; border-radius: 12px;
+    background: white; border: 1px solid var(--bd); border-radius: 12px;
     font-size: 0.82rem; color: #475569;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
   }
@@ -511,7 +625,7 @@ BRAND_CSS = """
 
   /* Step cards (welcome page how-to) */
   .step-card {
-    background: white; border: 1px solid #ECEEF2; border-radius: 14px;
+    background: white; border: 1px solid var(--bd); border-radius: 14px;
     padding: 22px 22px 20px 22px; height: 100%;
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
@@ -529,7 +643,7 @@ BRAND_CSS = """
 
   /* Hero info card on welcome page */
   .hero-card {
-    background: white; border: 1px solid #ECEEF2; border-radius: 16px;
+    background: white; border: 1px solid var(--bd); border-radius: 16px;
     padding: 24px 28px; margin-bottom: 22px;
     box-shadow: 0 1px 2px rgba(15,23,42,0.03);
     position: relative; overflow: hidden;
@@ -541,14 +655,17 @@ BRAND_CSS = """
   .hero-card .hero-title {font-size: 1.05rem; font-weight: 600; color: #0F172A; margin-bottom: 6px;}
   .hero-card .hero-body {color: #475569; line-height: 1.65; font-size: 0.94rem;}
 
-  /* Expanders — sleeker */
+  /* ===== 13. Expanders ===== */
   [data-testid="stExpander"] {
-    border: 1px solid #ECEEF2 !important; border-radius: 12px !important;
-    background: white; box-shadow: 0 1px 2px rgba(15,23,42,0.03);
-    margin-bottom: 10px;
+    border: 1px solid var(--bd) !important; border-radius: 12px !important;
+    background: var(--sf) !important; box-shadow: 0 1px 2px rgba(15,23,42,0.03) !important;
+    margin-bottom: 10px !important; overflow: hidden !important;
   }
-  [data-testid="stExpander"] summary {padding: 14px 18px !important;}
-  [data-testid="stExpander"] summary:hover {background: #F8FAFC;}
+  [data-testid="stExpander"] summary {
+    padding: 13px 18px !important; font-weight: 600 !important;
+    font-size: 0.9rem !important; color: var(--t0) !important;
+  }
+  [data-testid="stExpander"] summary:hover {background: #F8FAFC !important;}
 
   /* ===== Responsive: tablet ===== */
   @media (max-width: 900px) {
@@ -589,24 +706,24 @@ BRAND_CSS = """
   [data-testid="stDataFrame"] {max-width: 100%;}
 
   /* ===== Matrix HTML table ===== */
-  .matrix-wrap {overflow-x: auto; margin-bottom: 14px; border-radius: 14px; background: white; border: 1px solid #ECEEF2; box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
+  .matrix-wrap {overflow-x: auto; margin-bottom: 14px; border-radius: 14px; background: white; border: 1px solid var(--bd); box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
   .matrix-table {width: 100%; border-collapse: collapse; font-size: 0.82rem;}
-  .mat-th {background: #F8FAFC; color: #64748B; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid #ECEEF2; white-space: nowrap;}
-  .mat-th-person {min-width: 150px; position: sticky; left: 0; z-index: 2; background: #F8FAFC; border-right: 1px solid #ECEEF2;}
+  .mat-th {background: #F8FAFC; color: #64748B; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--bd); white-space: nowrap;}
+  .mat-th-person {min-width: 150px; position: sticky; left: 0; z-index: 2; background: #F8FAFC; border-right: 1px solid var(--bd);}
   .matrix-table tbody tr:hover {background: rgba(248,250,252,0.6);}
   .mat-td {padding: 8px 14px; border-bottom: 1px solid #F1F5F9; white-space: nowrap; font-size: 0.82rem; font-weight: 500; color: #0F172A;}
-  .mat-td-person {font-weight: 600; min-width: 150px; position: sticky; left: 0; background: white; border-right: 1px solid #ECEEF2; z-index: 1;}
+  .mat-td-person {font-weight: 600; min-width: 150px; position: sticky; left: 0; background: white; border-right: 1px solid var(--bd); z-index: 1;}
   .matrix-table tbody tr:hover .mat-td-person {background: #F8FAFC;}
   .mat-missing {color: #CBD5E1 !important; font-size: 0.8rem !important; font-weight: 400 !important;}
   .mat-lifetime {color: #64748B !important; background: #F8FAFC !important; font-style: italic;}
   /* Matrix stats strip */
-  .matrix-stats {display: flex; flex-wrap: wrap; align-items: stretch; margin-bottom: 14px; background: white; border: 1px solid #ECEEF2; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
-  .mstat {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 22px; border-right: 1px solid #ECEEF2; flex: 1; min-width: 80px;}
+  .matrix-stats {display: flex; flex-wrap: wrap; align-items: stretch; margin-bottom: 14px; background: white; border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.03);}
+  .mstat {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 22px; border-right: 1px solid var(--bd); flex: 1; min-width: 80px;}
   .mstat:last-child {border-right: none;}
   .mstat-label {font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-bottom: 3px;}
   .mstat b {font-size: 1.35rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #0F172A;}
   @media (max-width: 700px) {.mstat {padding: 10px 12px;} .mstat b {font-size: 1.1rem;} .mstat-label {font-size: 0.6rem;} .matrix-stats {gap: 0;}}
-  @media (max-width: 480px) {.mstat {flex: 0 0 50%; border-bottom: 1px solid #ECEEF2;}}
+  @media (max-width: 480px) {.mstat {flex: 0 0 50%; border-bottom: 1px solid var(--bd);}}
   /* Required-missing cell */
   .mat-required {background: #FEE2E2 !important; color: #991B1B !important; font-weight: 700 !important; font-size: 0.72rem !important; letter-spacing: 0.04em; text-transform: uppercase;}
   /* Category group header row */
