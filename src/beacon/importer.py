@@ -10,6 +10,7 @@ def parse_matrix_workbook(
     job_col: str,
     start_col: str,
     training_start_col: str,
+    email_col: str | None = None,
 ) -> dict:
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = wb.active
@@ -18,6 +19,7 @@ def parse_matrix_workbook(
     job_i = column_index_from_string(job_col)
     start_i = column_index_from_string(start_col)
     train_i = column_index_from_string(training_start_col)
+    email_i = column_index_from_string(email_col) if email_col else None
 
     training_types: list[str] = []
     col = train_i
@@ -36,11 +38,15 @@ def parse_matrix_workbook(
             break
         start = ws.cell(row=r, column=start_i).value
         job = ws.cell(row=r, column=job_i).value
-        people.append({
+        row: dict = {
             "name": str(name).strip(),
             "job_title": str(job).strip() if job else None,
             "start_date": start.isoformat() if hasattr(start, "isoformat") else (str(start) if start else None),
-        })
+        }
+        if email_i:
+            email_val = ws.cell(row=r, column=email_i).value
+            row["email"] = str(email_val).strip().lower() if email_val else None
+        people.append(row)
         r += 1
 
     return {"people": people, "training_types": training_types}

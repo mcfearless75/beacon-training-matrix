@@ -245,6 +245,14 @@ def current_person() -> dict | None:
         or []
     )
     if rows:
+        # Stamp last_login on every session resolution (non-fatal if it fails)
+        try:
+            from datetime import datetime, timezone
+            sb.table("people").update(
+                {"last_login": datetime.now(timezone.utc).isoformat()}
+            ).eq("id", rows[0]["id"]).execute()
+        except Exception:
+            pass
         return rows[0]
 
     # Fallback: match by email and auto-link on first sign-in.

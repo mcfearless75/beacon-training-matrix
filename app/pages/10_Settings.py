@@ -35,10 +35,15 @@ st.divider()
 st.subheader("Import from xlsx")
 uploaded = st.file_uploader("Training Matrix.xlsx", type=["xlsx"])
 header_row = st.number_input("Header row (1-indexed)", value=7)
-name_col = st.text_input("Name column letter", value="A")
-job_col = st.text_input("Job title column letter", value="D")
-start_col = st.text_input("Start date column letter", value="I")
-training_start_col = st.text_input("First training-type column letter", value="J")
+c1, c2 = st.columns(2)
+with c1:
+    name_col = st.text_input("Name column letter", value="A")
+    job_col = st.text_input("Job title column letter", value="D")
+    start_col = st.text_input("Start date column letter", value="I")
+with c2:
+    email_col = st.text_input("Email column letter (optional)", value="",
+                              help="Leave blank if your spreadsheet has no email column.")
+    training_start_col = st.text_input("First training-type column letter", value="J")
 
 if uploaded and st.button("Import"):
     with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
@@ -51,6 +56,7 @@ if uploaded and st.button("Import"):
         job_col=job_col,
         start_col=start_col,
         training_start_col=training_start_col,
+        email_col=email_col.strip() or None,
     )
     svc = service_client()
     for tname in parsed["training_types"]:

@@ -16,7 +16,7 @@ help_box(
     "Set someone to <b>inactive</b> to remove them from the Matrix — their training history is preserved.",
 )
 
-sb = anon_client()
+sb = service_client()  # admin page — service role bypasses RLS; page is gated by require_admin()
 
 # ===== Add new person =====
 with st.expander("Add new person", expanded=False):
@@ -139,10 +139,21 @@ def _render_people(plist: list, tab_key: str) -> None:
             expander_label += "  (inactive)"
 
         with st.expander(expander_label):
-            # Compliance badge strip
+            # Compliance badge + last login
+            last_login = p.get("last_login")
+            if last_login:
+                try:
+                    from datetime import datetime, timezone
+                    ll = datetime.fromisoformat(last_login.replace("Z", "+00:00"))
+                    ll_fmt = ll.strftime("%d %b %Y, %H:%M")
+                except Exception:
+                    ll_fmt = last_login
+            else:
+                ll_fmt = "Never signed in"
             st.markdown(
                 f'<div style="margin-bottom:14px;">'
                 f'<span class="compliance-badge {tone}">{badge_text}</span>'
+                f'&nbsp;&nbsp;<span style="color:#64748B;font-size:0.82rem;">Last login: {ll_fmt}</span>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
