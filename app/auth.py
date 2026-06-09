@@ -286,11 +286,14 @@ def _render_sidebar_user():
     if st.session_state.get("_sidebar_rendered"):
         return
     st.session_state["_sidebar_rendered"] = True
-    # Remove the login-body class so its narrow max-width doesn't bleed into app pages.
-    components.html(
-        "<script>window.parent.document.body.classList.remove('login-active');</script>",
-        height=0,
-    )
+    # Remove the login-body class once after login. Guard prevents a new iframe
+    # being created on every page navigation, which causes a visible style flicker.
+    if not st.session_state.get("_login_class_cleared"):
+        st.session_state["_login_class_cleared"] = True
+        components.html(
+            "<script>window.parent.document.body.classList.remove('login-active');</script>",
+            height=0,
+        )
     with st.sidebar:
         st.markdown("---")
         if _auth_enabled():
@@ -314,7 +317,8 @@ def _render_sidebar_user():
                 except Exception:
                     pass
                 _clear_rt_cookie()
-            for k in ("sb_session", "otp_stage", "otp_email", "demo_person"):
+            for k in ("sb_session", "otp_stage", "otp_email", "demo_person",
+                      "_css_injected", "_login_class_cleared"):
                 st.session_state.pop(k, None)
             st.rerun()
 
