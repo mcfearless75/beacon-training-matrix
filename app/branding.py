@@ -98,138 +98,198 @@ BRAND_CSS = """
   .kpi-tile.month .value {color: #D97706;}
   .kpi-tile.quarter .value {color: #16A34A;}
 
-  /* ===== Login experience ===== */
-  /* Atmospheric background applied to the whole app on login page */
+  /* ===== Login experience — dark prestige / enterprise SaaS ===== */
   .login-active {
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(244,132,95,0.18), transparent 60%),
-      radial-gradient(900px 500px at 10% 110%, rgba(14,95,255,0.10), transparent 60%),
-      linear-gradient(180deg, #FFFBF6 0%, #F7F4EF 100%) !important;
+      radial-gradient(ellipse 900px 600px at 85% -5%, rgba(244,132,95,0.28), transparent 55%),
+      radial-gradient(ellipse 600px 400px at -5% 95%, rgba(244,132,95,0.12), transparent 55%),
+      linear-gradient(160deg, #0D1526 0%, #080E1C 55%, #0A1020 100%) !important;
     min-height: 100vh;
   }
   .login-active [data-testid="stAppViewContainer"] {background: transparent !important;}
-  .login-active .block-container {max-width: 480px; padding-top: 4vh;}
+  .login-active .block-container {
+    max-width: 460px !important;
+    padding-top: 5vh !important;
+    padding-bottom: 5vh !important;
+  }
 
-  /* Card top — logo + headings */
+  /* Card — clean white, sharp shadow */
   .login-shell {
-    background: linear-gradient(180deg, #FFFFFF 0%, #FFFCF8 100%);
-    border-radius: 24px 24px 0 0;
-    border: 1px solid #F1E4D2;
+    background: #FFFFFF;
+    border-radius: 20px 20px 0 0;
+    border: 1px solid rgba(255,255,255,0.08);
     border-bottom: none;
-    padding: 40px 36px 24px 36px;
+    padding: 44px 40px 28px 40px;
     text-align: center;
-    box-shadow: 0 24px 60px -20px rgba(244,132,95,0.22), 0 8px 24px rgba(13,27,42,0.06);
+    box-shadow:
+      0 32px 80px rgba(0,0,0,0.55),
+      0 8px 24px rgba(0,0,0,0.35),
+      0 0 0 1px rgba(255,255,255,0.04);
     position: relative;
+    overflow: hidden;
   }
-  /* Decorative top accent line */
+  /* Top accent bar */
   .login-shell::before {
-    content: ""; position: absolute; top: 0; left: 24px; right: 24px; height: 3px;
-    background: linear-gradient(90deg, #F4845F, #FFB74D, #F4845F);
-    border-radius: 0 0 6px 6px;
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #E5663C 0%, #F4845F 45%, #FFB84D 100%);
   }
+  /* Subtle inner glow */
+  .login-shell::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(244,132,95,0.07), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Logo container */
   .login-logo-pill {
     display: inline-flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #FFF8F0 0%, #FFE2C6 100%);
-    border: 1px solid #FFD3AC;
-    border-radius: 999px;
-    padding: 18px 36px;
-    margin-bottom: 22px;
-    box-shadow: 0 6px 20px rgba(244,132,95,0.22), inset 0 -2px 0 rgba(255,255,255,0.6);
+    background: #F6F8FA;
+    border: 1px solid #E8EBF0;
+    border-radius: 14px;
+    padding: 14px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
-  .login-logo-pill img {height: 56px; width: auto; display: block;}
-  .login-shell h1 {
-    font-size: 1.85rem; margin-bottom: 8px; color: #0D1B2A;
-    letter-spacing: -0.02em; font-weight: 700; text-align: center;
-  }
-  .login-shell .login-tag {
-    color: #6B7B95; margin-bottom: 4px; font-size: 0.95rem; text-align: center;
+  .login-logo-pill img {height: 48px; width: auto; display: block;}
+
+  /* Product eyebrow */
+  .login-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #F4845F;
+    margin-bottom: 10px;
   }
 
-  /* Card body — Streamlit inputs/buttons styled to extend the card */
+  .login-shell h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #0D1B2A;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    line-height: 1.1;
+    text-align: center;
+  }
+  .login-shell .login-tag {
+    color: #6B7B95;
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    text-align: center;
+    font-weight: 400;
+  }
+  .login-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #E8EBF0 30%, #E8EBF0 70%, transparent);
+    margin: 20px 0 4px 0;
+  }
+
+  /* Card mid-section — Streamlit widget area */
   .login-active [data-testid="stTextInput"] {
     margin-top: 0 !important;
     background: white;
-    border-left: 1px solid #F1E4D2;
-    border-right: 1px solid #F1E4D2;
-    padding: 8px 32px 0 32px;
+    border-left: 1px solid #E8EBF0;
+    border-right: 1px solid #E8EBF0;
+    padding: 4px 36px 0 36px;
   }
-  .login-active [data-testid="stTextInput"] > div > div > input {
-    text-align: center;
-    background: #FAFBFD !important;
-    border: 1px solid #E5E9F2 !important;
-    border-radius: 12px !important;
-    padding: 14px 16px !important;
-    font-size: 1rem !important;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+  .login-active [data-testid="stTextInput"] input {
+    background: #F8FAFC !important;
+    border: 1.5px solid #DDE2EC !important;
+    border-radius: 10px !important;
+    padding: 13px 16px !important;
+    font-size: 0.97rem !important;
+    font-weight: 500 !important;
+    color: #1A2235 !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  .login-active [data-testid="stTextInput"] > div > div > input:focus {
+  .login-active [data-testid="stTextInput"] input:focus {
     border-color: #F4845F !important;
-    box-shadow: 0 0 0 3px rgba(244,132,95,0.18) !important;
+    box-shadow: 0 0 0 3px rgba(244,132,95,0.15) !important;
+    background: #FFFFFF !important;
+  }
+  .login-active [data-testid="stTextInput"] input::placeholder {
+    color: #A8B3C8 !important;
+    font-weight: 400 !important;
   }
 
-  /* Primary buttons inside the login experience — bold orange gradient */
+  /* Button wrapper — part of card */
   .login-active [data-testid="stVerticalBlock"] > div:has(> .stButton),
   .login-active [data-testid="stHorizontalBlock"] {
     background: white;
-    border-left: 1px solid #F1E4D2;
-    border-right: 1px solid #F1E4D2;
-    padding: 14px 32px 8px 32px;
+    border-left: 1px solid #E8EBF0;
+    border-right: 1px solid #E8EBF0;
+    padding: 10px 36px 6px 36px;
   }
+
+  /* Primary CTA button */
   .login-active .stButton > button {
-    background: linear-gradient(135deg, #F4845F 0%, #E5663C 100%) !important;
+    background: #E86038 !important;
     color: white !important;
     border: none !important;
-    border-radius: 12px !important;
-    padding: 0.75rem 1.4rem !important;
-    font-weight: 600 !important;
-    font-size: 0.98rem !important;
-    letter-spacing: 0.01em;
-    box-shadow: 0 4px 14px rgba(244,132,95,0.32), inset 0 -2px 0 rgba(0,0,0,0.06) !important;
-    transition: transform 0.08s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+    border-radius: 10px !important;
+    padding: 0.8rem 1.4rem !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0.01em !important;
+    box-shadow: 0 4px 16px rgba(232,96,56,0.38), 0 1px 0 rgba(255,255,255,0.12) inset !important;
+    transition: transform 0.07s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+    position: relative !important;
   }
   .login-active .stButton > button:hover {
-    filter: brightness(1.05);
-    box-shadow: 0 6px 18px rgba(244,132,95,0.42), inset 0 -2px 0 rgba(0,0,0,0.08) !important;
+    background: #D4562E !important;
+    box-shadow: 0 6px 20px rgba(232,96,56,0.48), 0 1px 0 rgba(255,255,255,0.12) inset !important;
+    transform: translateY(-1px) !important;
   }
-  .login-active .stButton > button:active {transform: translateY(1px);}
+  .login-active .stButton > button:active {
+    transform: translateY(0px) !important;
+    box-shadow: 0 2px 8px rgba(232,96,56,0.30) !important;
+  }
 
-  /* Secondary "Use different email" — subtle */
-  .login-active [data-testid="column"]:last-child .stButton > button {
-    background: white !important; color: #5B6B85 !important;
-    border: 1px solid #E5E9F2 !important;
+  /* Back link / secondary button */
+  .login-active [data-testid="column"]:last-child .stButton > button,
+  .login-active .stButton:not(:first-of-type) > button {
+    background: transparent !important;
+    color: #6B7B95 !important;
+    border: 1.5px solid #DDE2EC !important;
     box-shadow: none !important;
     font-weight: 500 !important;
   }
-  .login-active [data-testid="column"]:last-child .stButton > button:hover {
+  .login-active [data-testid="column"]:last-child .stButton > button:hover,
+  .login-active .stButton:not(:first-of-type) > button:hover {
     background: #F4F6FA !important;
+    color: #3D4E6A !important;
+    transform: none !important;
   }
 
-  /* Info / success / error blocks while logged out — softer rounded edges */
+  /* Alerts inside login */
   .login-active [data-testid="stAlert"] {
-    margin-left: 32px; margin-right: 32px;
-    border-radius: 12px;
+    margin-left: 36px; margin-right: 36px;
+    border-radius: 10px;
+    font-size: 0.9rem;
     background: white;
-    border-left: 1px solid #F1E4D2 !important;
-    border-right: 1px solid #F1E4D2 !important;
+    border-left: 1px solid #E8EBF0 !important;
+    border-right: 1px solid #E8EBF0 !important;
   }
 
-  /* Card bottom — footer caption */
+  /* Card footer */
   .login-footer {
-    background: linear-gradient(180deg, #FFFCF8 0%, #FFF6EC 100%);
-    border-radius: 0 0 24px 24px;
-    border: 1px solid #F1E4D2;
-    border-top: none;
-    padding: 16px 32px 22px 32px;
+    background: #F8FAFC;
+    border-radius: 0 0 20px 20px;
+    border: 1px solid #E8EBF0;
+    border-top: 1px solid #EEF1F7;
+    padding: 14px 32px 18px 32px;
     text-align: center;
-    color: #8C7B66;
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
+    color: #9BAABB;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 600;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35);
   }
-  .login-footer .dot {color: #F4845F; margin: 0 8px;}
+  .login-footer .dot {color: #F4845F; margin: 0 6px; opacity: 0.7;}
 
   /* Buttons */
   .stButton > button {

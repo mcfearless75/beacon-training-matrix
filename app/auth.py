@@ -121,8 +121,10 @@ def login_screen():
         f"""
         <div class="login-shell">
           {logo_html}
-          <h1>Beacon Training Matrix</h1>
-          <div class="login-tag">Enter your work email — we'll send a sign-in code.</div>
+          <div class="login-eyebrow">Beacon Risk</div>
+          <h1>Training Matrix</h1>
+          <div class="login-tag">Workforce compliance, simplified.<br>Enter your work email to sign in.</div>
+          <div class="login-divider"></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -181,7 +183,8 @@ def login_screen():
 
     st.markdown(
         '<div class="login-footer">'
-        'Beacon Risk <span class="dot">•</span> Health & Safety Consultants'
+        'Beacon Risk <span class="dot">·</span> H&amp;S Consultants'
+        ' <span class="dot">·</span> Secure OTP Sign-in'
         '</div>',
         unsafe_allow_html=True,
     )
