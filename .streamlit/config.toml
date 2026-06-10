@@ -6,6 +6,14 @@ secondaryBackgroundColor = "#F4F6FA"
 textColor = "#0F172A"
 font = "sans serif"
 
+# Sidebar painted dark navy by the native theme — first paint matches the
+# injected CSS, so page navigation no longer flashes a light sidebar.
+[theme.sidebar]
+backgroundColor = "#0D1526"
+secondaryBackgroundColor = "#16213A"
+textColor = "#94A3B8"
+linkColor = "#FBBF9A"
+
 [server]
 headless = true
 enableCORS = false
