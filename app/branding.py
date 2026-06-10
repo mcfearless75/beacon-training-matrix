@@ -39,6 +39,14 @@ BRAND_CSS = """
   }
   .block-container {padding-top: 2rem; padding-bottom: 4rem; max-width: 1280px;}
   [data-testid="stAppViewContainer"] {background: var(--bg);}
+  /* Fade-in on CSS load — masks the FOUC transition so styled content appears smoothly */
+  [data-testid="stAppViewContainer"] > section > div {
+    animation: beacon-fadein 0.22s ease-out;
+  }
+  @keyframes beacon-fadein {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   /* ===== 3. Headings ===== */
   h2 {font-size: 1.2rem !important; font-weight: 700 !important; color: var(--t0) !important; letter-spacing: -0.015em !important;}

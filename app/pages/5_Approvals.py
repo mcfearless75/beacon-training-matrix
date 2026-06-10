@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import streamlit as st
 
@@ -128,7 +128,7 @@ else:
                         try:
                             sb.table("training_records").update({
                                 "certificate_status": "approved",
-                                "certificate_reviewed_at": datetime.utcnow().isoformat(),
+                                "certificate_reviewed_at": datetime.now(timezone.utc).isoformat(),
                                 "certificate_reviewed_by": reviewer_id,
                                 "certificate_reject_reason": None,
                             }).eq("id", rec["id"]).execute()
@@ -147,7 +147,7 @@ else:
                             try:
                                 sb.table("training_records").update({
                                     "certificate_status": "rejected",
-                                    "certificate_reviewed_at": datetime.utcnow().isoformat(),
+                                    "certificate_reviewed_at": datetime.now(timezone.utc).isoformat(),
                                     "certificate_reviewed_by": reviewer_id,
                                     "certificate_reject_reason": reason.strip(),
                                 }).eq("id", rec["id"]).execute()
