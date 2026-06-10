@@ -313,7 +313,7 @@ def _render_sidebar_user():
                     pass
                 _clear_rt_cookie()
             for k in ("sb_session", "otp_stage", "otp_email", "demo_person",
-                      "_css_injected", "_login_class_cleared"):
+                      "_login_class_cleared"):
                 st.session_state.pop(k, None)
             st.rerun()
 

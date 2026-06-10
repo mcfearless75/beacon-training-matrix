@@ -592,12 +592,9 @@ BRAND_CSS = """
 
 
 def inject_css() -> None:
-    # CSS injected via st.markdown persists in the DOM across Streamlit SPA
-    # navigations — no need to re-inject on every page, which causes a visible
-    # flash as the style tag is momentarily absent between renders.
-    if st.session_state.get("_css_injected"):
-        return
-    st.session_state["_css_injected"] = True
+    # Must run on every page render — multipage Streamlit does not persist
+    # st.markdown output across page navigations, so the CSS must be
+    # re-injected each time the page script runs.
     st.markdown(BRAND_CSS, unsafe_allow_html=True)
 
 
