@@ -6,10 +6,8 @@ import streamlit as st
 LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
 
 BRAND_CSS = """
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
   /* ===== 0. Streamlit chrome ===== */
   #MainMenu {visibility: hidden;}
   footer {visibility: hidden;}
