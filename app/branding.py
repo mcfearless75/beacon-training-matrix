@@ -482,6 +482,30 @@ BRAND_CSS = """
   .help-box .help-title {font-weight: 600; color: #0F172A; margin-bottom: 4px; font-size: 0.95rem;}
   .help-box .help-body {color: #64748B; font-size: 0.88rem; line-height: 1.6;}
 
+  /* Tutorial steps — big, friendly, numbered. Written for non-technical users. */
+  .tut-step {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: white; border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px 22px; margin-bottom: 14px;
+  }
+  .tut-step .tut-num {
+    flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--olt); color: var(--or2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; font-weight: 800;
+  }
+  .tut-step .tut-title {font-size: 1.05rem; font-weight: 700; color: var(--t0); margin-bottom: 4px;}
+  .tut-step .tut-body {font-size: 0.97rem; color: var(--t2); line-height: 1.7;}
+  .tut-step .tut-body b {color: var(--t0);}
+  .tut-step .tut-where {
+    display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px;
+    background: #EFF6FF; color: #1D4ED8; font-size: 0.8rem; font-weight: 600;
+  }
+  .tut-section {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--or); margin: 26px 0 12px 0;
+  }
+
   /* Step cards (welcome page how-to) */
   .step-card {
     background: white; border: 1px solid var(--bd); border-radius: 14px;
@@ -694,6 +718,26 @@ def help_box(title: str, body: str) -> None:
         '</div>',
         unsafe_allow_html=True,
     )
+
+
+def tut_step(num: int, title: str, body: str, where: str = "") -> None:
+    """One big friendly numbered tutorial step. Plain-English help for the Help page."""
+    where_html = f'<span class="tut-where">📍 {where}</span>' if where else ""
+    st.markdown(
+        '<div class="tut-step">'
+        f'<div class="tut-num">{num}</div>'
+        '<div>'
+        f'<div class="tut-title">{title}</div>'
+        f'<div class="tut-body">{body}{where_html}</div>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def tut_section(label: str) -> None:
+    """Small orange section label used between tutorial groups."""
+    st.markdown(f'<div class="tut-section">{label}</div>', unsafe_allow_html=True)
 
 
 def colour_legend() -> None:

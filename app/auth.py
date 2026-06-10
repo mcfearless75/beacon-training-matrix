@@ -283,12 +283,47 @@ def current_person() -> dict | None:
     return person
 
 
+_TOUR_COOKIE = "beacon_tour_done"
+
+
+@st.dialog("👋 Welcome!")
+def _welcome_dialog():
+    """First-visit welcome pop-up, written in plain English for new users."""
+    st.markdown(
+        "This app keeps track of **your training and certificates** — "
+        "like a logbook that never gets lost.\n\n"
+        "Three things worth knowing:\n\n"
+        "1. **My Profile** (in the left menu) shows *your* courses and when they run out.\n"
+        "2. **Colours are traffic lights** — green is fine, red needs sorting.\n"
+        "3. **You can't break anything** by clicking around, so have a look!\n"
+    )
+    if st.button("Show me how it all works", type="primary", use_container_width=True):
+        st.switch_page("pages/11_Help.py")
+    if st.button("No thanks, let me in", use_container_width=True):
+        st.rerun()
+
+
+def _maybe_show_welcome() -> None:
+    """Show the welcome pop-up once per browser. Remembered via cookie."""
+    if st.session_state.get("_welcome_done"):
+        return
+    st.session_state["_welcome_done"] = True
+    try:
+        if _cookies().get(_TOUR_COOKIE):
+            return
+        _cookies().set(_TOUR_COOKIE, "1", max_age=365 * 24 * 3600)
+    except Exception:
+        return  # cookies unavailable — don't risk nagging on every visit
+    _welcome_dialog()
+
+
 def _render_sidebar_user():
     """Render signed-in user + Sign out button in the sidebar.
     Guard prevents duplicate widget keys when page scripts also call require_auth."""
     if st.session_state.get("_sidebar_rendered"):
         return
     st.session_state["_sidebar_rendered"] = True
+    _maybe_show_welcome()
     # Remove the login-body class once after login. Guard prevents a new iframe
     # being created on every page navigation, which causes a visible style flicker.
     if not st.session_state.get("_login_class_cleared"):
