@@ -98,6 +98,14 @@ def _friendly_otp_error(e: Exception) -> str:
 def login_screen():
     load_config()  # validates env at startup; no callback redirect needed for OTP flow
     inject_css()
+    # Hide sidebar and collapse button on the login screen — nav must not show before auth
+    st.markdown(
+        "<style>"
+        "[data-testid='stSidebar']{display:none !important;}"
+        "[data-testid='collapsedControl']{display:none !important;}"
+        "</style>",
+        unsafe_allow_html=True,
+    )
 
     # Centre the login using columns — no JS body-class injection needed
     _, col, _ = st.columns([1, 2, 1])
