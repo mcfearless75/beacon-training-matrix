@@ -80,8 +80,8 @@ gauge_fig = go.Figure(go.Indicator(
 gauge_fig.update_layout(
     paper_bgcolor="white",
     font={"color": "#334155", "family": "Inter, sans-serif"},
-    height=270,
-    margin=dict(l=20, r=20, t=60, b=10),
+    height=290,
+    margin=dict(l=30, r=30, t=90, b=10),
 )
 
 # ── Stacked distribution bar
@@ -111,11 +111,11 @@ dist_fig.update_layout(
     barmode="stack",
     paper_bgcolor="white",
     plot_bgcolor="white",
-    height=68,
-    margin=dict(l=0, r=0, t=0, b=40),
+    height=92,
+    margin=dict(l=2, r=2, t=4, b=48),
     legend=dict(
         orientation="h",
-        y=-0.65,
+        y=-0.9,
         x=0,
         font={"size": 11, "color": "#64748B", "family": "Inter, sans-serif"},
         bgcolor="rgba(0,0,0,0)",
