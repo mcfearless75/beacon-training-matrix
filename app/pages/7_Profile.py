@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client
 from beacon.reminders import classify_window, compliance_summary
 
@@ -13,6 +13,16 @@ inject_css()
 page_header(
     "Person Profile",
     "Drill into one person's full training history and renewals.",
+)
+page_tour(
+    "person_profile",
+    "A deep dive on one person at a time.",
+    [
+        ("Pick a person",
+         "Choose a name at the top — everything below changes to show just them."),
+        ("Their full history",
+         "Every course they've done and when each one runs out, all in one place."),
+    ],
 )
 
 sb = anon_client()

@@ -3,13 +3,26 @@ from datetime import date
 import streamlit as st
 
 from app.auth import current_user_email, require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client, service_client
 from beacon.reminders import compliance_summary
 
 require_admin()
 inject_css()
 page_header("People", "Add, edit, and manage workforce records.")
+page_tour(
+    "people",
+    "This is where you add and look after your team.",
+    [
+        ("Add a new person",
+         "Fill in the form with their name and email, then press add. Done."),
+        ("Edit someone",
+         "Click a person's name to open them up and change their details."),
+        ("Let them sign in themselves",
+         "Use <b>send invite</b> — they get an email with a link, click it, "
+         "and they're in. No passwords to set up."),
+    ],
+)
 help_box(
     "Managing people",
     "Add new starters with the form below. Click any name to expand and edit their details. "

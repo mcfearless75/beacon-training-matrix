@@ -3,12 +3,24 @@ from datetime import date, datetime, timezone
 import streamlit as st
 
 from app.auth import current_user_email, get_session, require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 
 require_admin()
 inject_css()
 page_header("Approvals", "Review certificates uploaded by workers.")
+page_tour(
+    "approvals",
+    "Certificates your team uploaded, waiting for your thumbs-up.",
+    [
+        ("Open one",
+         "Click an item to see the certificate that was uploaded."),
+        ("Looks right? Approve it",
+         "Press <b>Approve</b> and the record turns valid straight away."),
+        ("Looks wrong? Reject it",
+         "Press <b>Reject</b> and write a short note so the person knows what to fix."),
+    ],
+)
 help_box(
     "Reviewing certificates",
     "Workers upload certificates from their My Profile page. Each upload lands here "

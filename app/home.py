@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from app.branding import LOGO_PATH, inject_css, loading_overlay, page_header
+from app.branding import LOGO_PATH, inject_css, loading_overlay, page_header, page_tour
 
 inject_css()
 loading_overlay()
@@ -15,6 +15,18 @@ with st.sidebar:
 page_header(
     "Welcome to Beacon Training Matrix",
     "Track every employee's training expiry. Get reminders before things lapse. Stay compliant.",
+)
+page_tour(
+    "home",
+    "Welcome! This home page is your starting point.",
+    [
+        ("New here?",
+         "Click <b>Help</b> at the bottom of the left menu for a simple guide to everything."),
+        ("Your daily habit",
+         "Most days, just open the <b>Dashboard</b> — it shows what needs attention today."),
+        ("Every page can explain itself",
+         "Look for the <b>💡 How does this page work?</b> button at the top of each page."),
+    ],
 )
 
 st.markdown(

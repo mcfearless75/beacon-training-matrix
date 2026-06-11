@@ -3,13 +3,24 @@ import tempfile
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client, service_client
 from beacon.importer import parse_matrix_workbook
 
 require_admin()
 inject_css()
 page_header("Settings", "Reminder recipient, sender details, and bulk import.")
+page_tour(
+    "settings",
+    "Two jobs live here: reminder emails and importing your old spreadsheet.",
+    [
+        ("Reminder email",
+         "Choose who gets the daily email about training that's about to run out."),
+        ("Import a spreadsheet",
+         "Already track training in Excel? Upload the file and the app fills itself in — "
+         "no retyping."),
+    ],
+)
 help_box(
     "Two things to configure",
     "<b>Reminder email</b> — who gets the daily expiry digest, and which address it's sent from. "

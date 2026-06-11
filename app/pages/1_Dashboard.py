@@ -5,13 +5,26 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import inject_css, kpi_row, page_header
+from app.branding import inject_css, kpi_row, page_header, page_tour
 from beacon.db import anon_client
 from beacon.reminders import classify_window, compliance_summary
 
 require_auth()
 inject_css()
 page_header("Dashboard", "Workforce compliance at a glance.")
+page_tour(
+    "dashboard",
+    "This is the team's report card — the big picture in one look.",
+    [
+        ("The dial is like a fuel gauge",
+         "The closer to 100%, the better the team is doing."),
+        ("The four cards count the problems",
+         "<b>Expired</b> means overdue right now. The other cards show what's "
+         "coming up soon."),
+        ("The list shows who to chase",
+         "Most urgent at the top. Start there!"),
+    ],
+)
 
 sb = anon_client()
 records_raw = sb.rpc("get_active_training_records").execute().data or []

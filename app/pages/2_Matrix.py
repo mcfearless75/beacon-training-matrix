@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import colour_legend, help_box, inject_css, page_header
+from app.branding import colour_legend, help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
@@ -13,6 +13,18 @@ inject_css()
 page_header(
     "Training Matrix",
     "Every person, every training type — coloured by time-to-expiry.",
+)
+page_tour(
+    "matrix",
+    "One big grid: every person down the side, every course along the top.",
+    [
+        ("Find a person",
+         "Read down the left side for names, then look across their row."),
+        ("Colours are traffic lights",
+         "Red squares are expired — sort those first. Green means fine."),
+        ("A blank square",
+         "Means that person has never done that course."),
+    ],
 )
 help_box(
     "How to read this",

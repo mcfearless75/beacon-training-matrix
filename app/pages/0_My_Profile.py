@@ -21,7 +21,7 @@ from app.auth import (
     get_session,
     require_worker_or_admin,
 )
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client, service_client
 from beacon.reminders import classify_window, compliance_summary
 
@@ -30,6 +30,20 @@ inject_css()
 page_header(
     "My Profile",
     "Keep your details up to date and upload certificates as you renew them.",
+)
+page_tour(
+    "my_profile",
+    "This page is all about YOU — your courses and your details.",
+    [
+        ("Look at your courses",
+         "Each course shows when it runs out. Green is fine, red needs sorting — "
+         "just like traffic lights."),
+        ("Fix your details",
+         "Wrong phone number or address? Scroll down, change it yourself, and press save."),
+        ("Upload a certificate",
+         "Done a course? Find it in your list, press <b>Upload certificate</b> and choose "
+         "the photo or PDF. A manager will tick it off — you're done."),
+    ],
 )
 
 

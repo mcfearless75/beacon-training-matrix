@@ -720,6 +720,61 @@ def help_box(title: str, body: str) -> None:
     )
 
 
+_TIPS_COOKIE = "beacon_tips_seen"
+
+
+def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
+    """First-visit pop-up walkthrough for a page, plus a replay button.
+
+    Pops up automatically the first time this browser visits the page
+    (remembered via cookie), and can be reopened any time with the
+    '💡 How does this page work?' button. Written for non-technical users.
+    """
+
+    @st.dialog("💡 How this page works")
+    def _tour() -> None:
+        st.markdown(f"**{intro}**")
+        for i, (title, body) in enumerate(steps, 1):
+            st.markdown(
+                f'<div class="tut-step" style="margin-bottom:10px;padding:14px 16px;">'
+                f'<div class="tut-num" style="flex:0 0 34px;width:34px;height:34px;font-size:1rem;">{i}</div>'
+                f'<div><div class="tut-title" style="font-size:0.95rem;">{title}</div>'
+                f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>',
+                unsafe_allow_html=True,
+            )
+        if st.button(
+            "Got it — let me try!",
+            type="primary",
+            use_container_width=True,
+            key=f"_tour_ok_{page_key}",
+        ):
+            st.rerun()
+
+    # Replay button — always available so users can re-read the guide.
+    if st.button("💡 How does this page work?", key=f"_tour_btn_{page_key}"):
+        _tour()
+        return
+
+    # Auto-open once per browser per page.
+    state_key = f"_tour_seen_{page_key}"
+    if st.session_state.get(state_key):
+        return
+    st.session_state[state_key] = True
+    try:
+        from app.auth import _cookies  # lazy import — auth imports branding
+
+        cookies = _cookies()
+        raw = cookies.get(_TIPS_COOKIE) or ""
+        seen = set(raw.split(",")) if raw else set()
+        if page_key in seen:
+            return
+        seen.add(page_key)
+        cookies.set(_TIPS_COOKIE, ",".join(sorted(seen)), max_age=365 * 24 * 3600)
+    except Exception:
+        return  # cookies unavailable — never risk nagging on every visit
+    _tour()
+
+
 def tut_step(num: int, title: str, body: str, where: str = "") -> None:
     """One big friendly numbered tutorial step. Plain-English help for the Help page."""
     where_html = f'<span class="tut-where">📍 {where}</span>' if where else ""

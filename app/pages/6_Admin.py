@@ -2,13 +2,26 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 from cron.run_reminders import run as run_cron
 
 require_admin()
 inject_css()
 page_header("Admin", "User management, reminder log, and manual cron triggers.")
+page_tour(
+    "admin",
+    "The keys to the app — who can sign in and what they can see.",
+    [
+        ("Invite a user",
+         "Type their email, pick a role, press send. They get a sign-in link by email — "
+         "no password needed."),
+        ("What roles mean",
+         "<b>Admin</b> sees and manages everything. <b>User</b> only sees their own profile."),
+        ("Reminder log",
+         "A record of the automatic emails the app has already sent — nothing for you to do."),
+    ],
+)
 help_box(
     "What's on this page",
     "<b>Invite user</b> — create a new login and send them a magic link by email. "

@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client
 from beacon.reminders import classify_window
 
@@ -14,6 +14,16 @@ inject_css()
 page_header(
     "Renewal Timeline",
     "See your training workload month by month for the year ahead.",
+)
+page_tour(
+    "timeline",
+    "What needs renewing, month by month, for the year ahead.",
+    [
+        ("Read it like a calendar",
+         "Each month shows the courses that run out then."),
+        ("Plan ahead",
+         "See a busy month coming? Book the courses early and spread the load."),
+    ],
 )
 help_box(
     "Plan your training calendar",

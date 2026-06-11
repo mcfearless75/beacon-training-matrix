@@ -1,12 +1,25 @@
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 
 require_admin()
 inject_css()
 page_header("Training Types", "The catalogue of qualifications and certifications tracked.")
+page_tour(
+    "training_types",
+    "The list of every course, ticket and certificate your company tracks.",
+    [
+        ("Add a course",
+         "Type its name and how long it lasts before it needs doing again."),
+        ("These become the grid columns",
+         "Every course you add here shows up in the Matrix automatically."),
+        ("Mark what's required",
+         "Use <b>Role Requirements</b> to say which courses each job must have — "
+         "anyone missing one gets flagged in red."),
+    ],
+)
 help_box(
     "What goes here",
     "Add every kind of training, ticket, or certificate you track. "

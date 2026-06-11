@@ -3,7 +3,7 @@ from datetime import date
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header
+from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 from beacon.reminders import classify_window, compliance_summary
 
@@ -12,6 +12,17 @@ inject_css()
 page_header(
     "Audit Report",
     "Export a print-ready compliance report for CHAS, Constructionline, ISO 45001, and client submissions.",
+)
+page_tour(
+    "audit_report",
+    "Proof for inspectors — a smart report you can print or save.",
+    [
+        ("Make the report",
+         "Press <b>Generate report</b> and it builds itself from your live data."),
+        ("Save it as a PDF",
+         "Download it, open it, then press <b>Ctrl+P</b> and choose <b>Save as PDF</b>. "
+         "Perfect for CHAS and client audits."),
+    ],
 )
 help_box(
     "How to export as PDF",
