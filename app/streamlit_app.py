@@ -58,6 +58,7 @@ audit_report = st.Page(
     "pages/9_Audit_Report.py", title="Audit Report", icon=":material/print:"
 )
 settings = st.Page("pages/10_Settings.py", title="Settings", icon=":material/settings:")
+help_page = st.Page("pages/11_Help.py", title="Help", icon=":material/help:")
 
 
 # ---- Role-aware navigation ----
@@ -72,11 +73,12 @@ if _authed:
             "Reviews": [approvals, audit_report],
             "Drill-down": [profile, timeline],
             "Setup": [admin_page, settings],
+            "Support": [help_page],
         }
     else:
         # Workers only see their own profile. Direct URL access to other pages
         # is still blocked by require_admin() at the top of each admin page.
-        nav = [my_profile]
+        nav = [my_profile, help_page]
     pg = st.navigation(nav, position="sidebar")
 else:
     # Not authenticated: suppress auto-discovered sidebar completely.
