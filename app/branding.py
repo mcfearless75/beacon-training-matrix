@@ -759,17 +759,30 @@ def _persist_tour_seen(page_key: str) -> None:
 
 
 def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
-    """Page walkthrough: popover replay button + first-visit auto-popup dialog.
+    """Page walkthrough: <details> replay toggle + first-visit auto-popup dialog.
 
-    The replay button uses st.popover — Streamlit owns the open/closed state so
-    it is always responsive with no rerun-timing issues.
+    The replay uses a native HTML <details>/<summary> — 100% rerun-proof because
+    the browser owns the open/close state and Streamlit never resets it.
 
-    The auto-popup uses st.dialog, but only fires after the cookie component has
-    mounted (run_key guard), so there are no intermediate reruns to close it.
-    Cookie write is deferred to the run after dismissal for the same reason.
+    st.popover AND st.expander both close on any full st.rerun() in Streamlit
+    <1.55 (GitHub #9067). The cookie component fires 2 reruns on every page
+    navigation, killing any overlay immediately after it opens. <details> is
+    completely immune because it lives in the browser DOM, not Python state.
+
+    The auto-popup still uses st.dialog, deferred past the cookie mount rerun.
     """
 
-    def _steps_html() -> None:
+    def _steps_raw() -> str:
+        rows = "".join(
+            f'<div class="tut-step" style="margin-bottom:10px;padding:14px 16px;">'
+            f'<div class="tut-num" style="flex:0 0 34px;width:34px;height:34px;font-size:1rem;">{i}</div>'
+            f'<div><div class="tut-title" style="font-size:0.95rem;">{title}</div>'
+            f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>'
+            for i, (title, body) in enumerate(steps, 1)
+        )
+        return f"<p><strong>{intro}</strong></p>{rows}"
+
+    def _steps_widgets() -> None:
         st.markdown(f"**{intro}**")
         for i, (title, body) in enumerate(steps, 1):
             st.markdown(
@@ -780,9 +793,15 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
                 unsafe_allow_html=True,
             )
 
-    # Replay button — popover never suffers from rerun timing flash.
-    with st.popover("💡 How does this page work?"):
-        _steps_html()
+    # Replay toggle — native HTML <details>, 100% rerun-proof.
+    st.markdown(
+        f'<details style="margin-bottom:1rem">'
+        f'<summary style="cursor:pointer;font-weight:500;font-size:0.9rem;">'
+        f'💡 How does this page work?</summary>'
+        f'<div style="padding-top:12px">{_steps_raw()}</div>'
+        f'</details>',
+        unsafe_allow_html=True,
+    )
 
     # ------------------------------------------------------------------ #
     # Auto-popup (first visit only)                                        #
@@ -790,7 +809,7 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
 
     @st.dialog("💡 How this page works")
     def _auto_tour() -> None:
-        _steps_html()
+        _steps_widgets()
         if st.button(
             "Got it — let me try!",
             type="primary",
