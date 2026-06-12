@@ -768,9 +768,12 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
     Timing matters here: the sidebar cookie component triggers a rerun as it
     mounts on every page navigation, and writing a cookie triggers another.
     Either rerun instantly closes an open st.dialog ("flash"). So the tour
-    (a) skips the first script run and opens on the mount rerun instead, and
-    (b) defers the cookie write to the run *after* dismissal.
+    (a) skips the first script run and opens on the mount rerun instead,
+    (b) defers the cookie write to the run *after* dismissal, and
+    (c) stores open-intent in session state so the dialog survives intermediate
+        reruns (cookie mount, etc.) rather than calling _tour() only once.
     """
+    open_key = f"_tour_open_{page_key}"
 
     @st.dialog("💡 How this page works")
     def _tour() -> None:
@@ -789,11 +792,17 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
             use_container_width=True,
             key=f"_tour_ok_{page_key}",
         ):
+            st.session_state[open_key] = False
             st.session_state["_tour_cookie_pending"] = page_key
             st.rerun()
 
     # Replay button — always available so users can re-read the guide.
     if st.button("💡 How does this page work?", key=f"_tour_btn_{page_key}"):
+        st.session_state[open_key] = True
+
+    # Open dialog whenever the intent flag is set — persists across intermediate
+    # reruns (cookie mount etc.) that would otherwise close a one-shot call.
+    if st.session_state.get(open_key):
         _tour()
         return
 
@@ -819,6 +828,7 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
         st.session_state[state_key] = True
         return
     st.session_state[state_key] = True
+    st.session_state[open_key] = True
     _tour()
 
 
