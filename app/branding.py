@@ -759,24 +759,17 @@ def _persist_tour_seen(page_key: str) -> None:
 
 
 def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
-    """First-visit pop-up walkthrough for a page, plus a replay button.
+    """Page walkthrough: popover replay button + first-visit auto-popup dialog.
 
-    Pops up automatically the first time this browser visits the page
-    (remembered via cookie), and can be reopened any time with the
-    '💡 How does this page work?' button. Written for non-technical users.
+    The replay button uses st.popover — Streamlit owns the open/closed state so
+    it is always responsive with no rerun-timing issues.
 
-    Timing matters here: the sidebar cookie component triggers a rerun as it
-    mounts on every page navigation, and writing a cookie triggers another.
-    Either rerun instantly closes an open st.dialog ("flash"). So the tour
-    (a) skips the first script run and opens on the mount rerun instead,
-    (b) defers the cookie write to the run *after* dismissal, and
-    (c) stores open-intent in session state so the dialog survives intermediate
-        reruns (cookie mount, etc.) rather than calling _tour() only once.
+    The auto-popup uses st.dialog, but only fires after the cookie component has
+    mounted (run_key guard), so there are no intermediate reruns to close it.
+    Cookie write is deferred to the run after dismissal for the same reason.
     """
-    open_key = f"_tour_open_{page_key}"
 
-    @st.dialog("💡 How this page works")
-    def _tour() -> None:
+    def _steps_html() -> None:
         st.markdown(f"**{intro}**")
         for i, (title, body) in enumerate(steps, 1):
             st.markdown(
@@ -786,28 +779,28 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
                 f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>',
                 unsafe_allow_html=True,
             )
+
+    # Replay button — popover never suffers from rerun timing flash.
+    with st.popover("💡 How does this page work?"):
+        _steps_html()
+
+    # ------------------------------------------------------------------ #
+    # Auto-popup (first visit only)                                        #
+    # ------------------------------------------------------------------ #
+
+    @st.dialog("💡 How this page works")
+    def _auto_tour() -> None:
+        _steps_html()
         if st.button(
             "Got it — let me try!",
             type="primary",
             use_container_width=True,
             key=f"_tour_ok_{page_key}",
         ):
-            st.session_state[open_key] = False
             st.session_state["_tour_cookie_pending"] = page_key
             st.rerun()
 
-    # Replay button — always available so users can re-read the guide.
-    if st.button("💡 How does this page work?", key=f"_tour_btn_{page_key}"):
-        st.session_state[open_key] = True
-
-    # Open dialog whenever the intent flag is set — persists across intermediate
-    # reruns (cookie mount etc.) that would otherwise close a one-shot call.
-    if st.session_state.get(open_key):
-        _tour()
-        return
-
-    # Deferred cookie write from a previous dismissal — happens on a quiet
-    # rerun where the resulting component refresh can't close anything.
+    # Deferred cookie write from a previous dismissal.
     pending = st.session_state.pop("_tour_cookie_pending", None)
     if pending:
         _persist_tour_seen(pending)
@@ -816,8 +809,8 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
     if st.session_state.get(state_key):
         return
 
-    # First run after navigation: a cookie-component mount rerun is imminent
-    # and would close the dialog instantly. Open on the rerun instead.
+    # Skip run 0 — the cookie component mount rerun is still coming and would
+    # close the dialog instantly. Open on run 1 instead.
     run_key = f"_tour_runs_{page_key}"
     runs = st.session_state.get(run_key, 0)
     st.session_state[run_key] = runs + 1
@@ -827,9 +820,9 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
     if _tour_already_seen(page_key):
         st.session_state[state_key] = True
         return
+
     st.session_state[state_key] = True
-    st.session_state[open_key] = True
-    _tour()
+    _auto_tour()
 
 
 def tut_step(num: int, title: str, body: str, where: str = "") -> None:
