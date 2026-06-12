@@ -3,7 +3,7 @@ import tempfile
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header, page_tour
+from app.branding import APP_NAME, help_box, inject_css, page_header, page_tour
 from beacon.db import anon_client, service_client
 from beacon.importer import parse_matrix_workbook
 
@@ -33,7 +33,7 @@ settings = sb.table("settings").select("*").eq("id", 1).single().execute().data 
 st.subheader("Reminder recipient")
 recipient = st.text_input("Recipient email", value=settings.get("reminder_recipient_email") or "")
 sender_email = st.text_input("Sender email (must be verified in Resend)", value=settings.get("sender_email") or "")
-sender_name = st.text_input("Sender name", value=settings.get("sender_name") or "Beacon Training Matrix")
+sender_name = st.text_input("Sender name", value=settings.get("sender_name") or APP_NAME)
 if st.button("Save settings"):
     sb.table("settings").update({
         "reminder_recipient_email": recipient or None,

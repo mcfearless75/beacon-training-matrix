@@ -5,7 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_cookies_controller import CookieController
 
-from app.branding import LOGO_PATH, inject_css
+from app.branding import APP_NAME, BRAND_NAME, BRAND_TAGLINE, LOGO_PATH, SHOW_LOGO, inject_css
 from beacon.config import load_config
 from beacon.db import anon_client
 
@@ -111,16 +111,16 @@ def login_screen():
     _, col, _ = st.columns([1, 2, 1])
 
     with col:
-        logo_uri = _logo_data_uri()
+        logo_uri = _logo_data_uri() if SHOW_LOGO else None
         logo_html = (
-            f'<div class="login-logo-pill"><img src="{logo_uri}" alt="Beacon Risk"/></div>'
+            f'<div class="login-logo-pill"><img src="{logo_uri}" alt="{BRAND_NAME}"/></div>'
             if logo_uri else ""
         )
         st.markdown(
             f"""
             <div class="login-shell">
               {logo_html}
-              <div class="login-eyebrow">Beacon Risk</div>
+              <div class="login-eyebrow">{BRAND_NAME}</div>
               <h1>Training Matrix</h1>
               <div class="login-tag">Workforce compliance, simplified.<br>
               Enter your work email to sign in.</div>
@@ -135,7 +135,7 @@ def login_screen():
         if stage == "request_email":
             email = st.text_input(
                 "Work email",
-                placeholder="you@beaconrisk.co.uk",
+                placeholder="you@yourcompany.co.uk",
                 label_visibility="collapsed",
                 key="otp_email_input",
             )
@@ -183,7 +183,7 @@ def login_screen():
 
         st.markdown(
             '<div class="login-footer">'
-            'Beacon Risk <span class="dot">·</span> H&amp;S Consultants'
+            f'{BRAND_NAME} <span class="dot">·</span> {BRAND_TAGLINE}'
             ' <span class="dot">·</span> Secure OTP Sign-in'
             '</div>',
             unsafe_allow_html=True,

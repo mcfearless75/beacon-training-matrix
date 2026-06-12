@@ -2,18 +2,26 @@
 
 import streamlit as st
 
-from app.branding import LOGO_PATH, inject_css, loading_overlay, page_header, page_tour
+from app.branding import (
+    APP_NAME,
+    LOGO_PATH,
+    SHOW_LOGO,
+    inject_css,
+    loading_overlay,
+    page_header,
+    page_tour,
+)
 
 inject_css()
 loading_overlay()
 
 with st.sidebar:
-    if LOGO_PATH.exists():
+    if SHOW_LOGO and LOGO_PATH.exists():
         st.image(str(LOGO_PATH), width=160)
-    st.markdown("### Beacon Training Matrix")
+    st.markdown(f"### {APP_NAME}")
 
 page_header(
-    "Welcome to Beacon Training Matrix",
+    f"Welcome to {APP_NAME}",
     "Track every employee's training expiry. Get reminders before things lapse. Stay compliant.",
 )
 page_tour(
@@ -33,7 +41,7 @@ st.markdown(
     '<div class="hero-card">'
     '<div class="hero-title">What this app does</div>'
     '<div class="hero-body">'
-    "Beacon Training Matrix replaces the spreadsheet you used to track who needs "
+    f"{APP_NAME} replaces the spreadsheet you used to track who needs "
     "which training and when it expires. It shows you at a glance what is overdue "
     "and what is coming up, and it emails a daily digest <b>90, 30, and 7 days</b> "
     "before any record expires — and on the day it expires."

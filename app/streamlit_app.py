@@ -13,11 +13,11 @@ import os
 import streamlit as st
 
 from app.auth import current_user_role, get_session, require_auth
-from app.branding import LOGO_PATH
+from app.branding import APP_NAME, LOGO_PATH, SHOW_LOGO
 
 st.set_page_config(
-    page_title="Beacon Training Matrix",
-    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🎓",
+    page_title=APP_NAME,
+    page_icon=str(LOGO_PATH) if (SHOW_LOGO and LOGO_PATH.exists()) else "🎓",
     layout="wide",
     initial_sidebar_state="auto",
 )

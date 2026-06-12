@@ -3,7 +3,7 @@ from datetime import date
 import streamlit as st
 
 from app.auth import require_admin
-from app.branding import help_box, inject_css, page_header, page_tour
+from app.branding import APP_NAME, help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 from beacon.reminders import classify_window, compliance_summary
 
@@ -191,7 +191,7 @@ HTML = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
   <tr>{type_row}</tr>
 </thead><tbody>{tbody}</tbody></table>
 </div>
-<div class="footer">Beacon Training Matrix · {today.strftime("%d %B %Y")} · Confidential</div>
+<div class="footer">{APP_NAME} · {today.strftime("%d %B %Y")} · Confidential</div>
 </body></html>"""
 
 # Download + preview

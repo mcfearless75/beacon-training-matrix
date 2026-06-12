@@ -40,7 +40,7 @@ st.caption(
     "Role is applied immediately — no need to promote afterwards."
 )
 with st.form("invite_user_form", clear_on_submit=True):
-    inv_email = st.text_input("Email address", placeholder="colleague@beaconrisk.co.uk")
+    inv_email = st.text_input("Email address", placeholder="colleague@yourcompany.co.uk")
     inv_role = st.selectbox("Role", ["user", "admin"])
     invited = st.form_submit_button("Send invite", type="primary", use_container_width=False)
 

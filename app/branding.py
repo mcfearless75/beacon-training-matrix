@@ -1,9 +1,19 @@
 """Shared branding helpers: CSS, header, KPI tiles."""
+import os
 from pathlib import Path
 
 import streamlit as st
 
 LOGO_PATH = Path(__file__).parent / "assets" / "logo.png"
+
+# White-label branding — set BRAND_NAME (and optionally APP_NAME, BRAND_TAGLINE)
+# in the environment to rebrand a deployment, e.g. the prospect sandbox.
+# Defaults keep production exactly as it is.
+BRAND_NAME = os.getenv("BRAND_NAME", "Beacon Risk")
+APP_NAME = os.getenv("APP_NAME", "Beacon Training Matrix")
+BRAND_TAGLINE = os.getenv("BRAND_TAGLINE", "H&S Consultants")
+# The Beacon logo only renders on the default brand — white-label gets no logo.
+SHOW_LOGO = "BRAND_NAME" not in os.environ
 
 BRAND_CSS = """
 <style>
@@ -630,7 +640,7 @@ def inject_css() -> None:
 
 def loading_overlay() -> None:
     """Full-screen pulsing-logo splash that auto-fades out on first render."""
-    if not LOGO_PATH.exists():
+    if not SHOW_LOGO or not LOGO_PATH.exists():
         return
     import base64
 
@@ -700,7 +710,9 @@ def loading_overlay() -> None:
     )
 
 
-def page_header(title: str, tagline: str = "", eyebrow: str = "Beacon Risk") -> None:
+def page_header(title: str, tagline: str = "", eyebrow: str | None = None) -> None:
+    if eyebrow is None:
+        eyebrow = BRAND_NAME
     eyebrow_html = f'<div class="eyebrow">{eyebrow}</div>' if eyebrow else ""
     tagline_html = f'<div class="tagline">{tagline}</div>' if tagline else ""
     st.markdown(

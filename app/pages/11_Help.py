@@ -7,7 +7,7 @@ confident with computers. Big numbered steps, no jargon.
 import streamlit as st
 
 from app.auth import require_auth
-from app.branding import inject_css, page_header, tut_section, tut_step
+from app.branding import BRAND_NAME, inject_css, page_header, tut_section, tut_step
 
 require_auth()
 inject_css()
@@ -132,6 +132,6 @@ with st.expander("**The screen looks odd or stuck**"):
 
 with st.expander("**I need a human to help me**"):
     st.markdown(
-        "Speak to your manager or email **Beacon Risk** — they can sort accounts, "
+        f"Speak to your manager or email **{BRAND_NAME}** — they can sort accounts, "
         "logins and anything on this list."
     )
