@@ -735,12 +735,41 @@ def help_box(title: str, body: str) -> None:
 _TIPS_COOKIE = "beacon_tips_seen"
 
 
+def _tour_already_seen(page_key: str) -> bool:
+    try:
+        from app.auth import _cookies  # lazy import — auth imports branding
+
+        raw = _cookies().get(_TIPS_COOKIE) or ""
+        return page_key in set(raw.split(","))
+    except Exception:
+        return True  # cookies unavailable — never risk nagging on every visit
+
+
+def _persist_tour_seen(page_key: str) -> None:
+    try:
+        from app.auth import _cookies
+
+        cookies = _cookies()
+        raw = cookies.get(_TIPS_COOKIE) or ""
+        seen = {x for x in raw.split(",") if x}
+        seen.add(page_key)
+        cookies.set(_TIPS_COOKIE, ",".join(sorted(seen)), max_age=365 * 24 * 3600)
+    except Exception:
+        pass
+
+
 def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
     """First-visit pop-up walkthrough for a page, plus a replay button.
 
     Pops up automatically the first time this browser visits the page
     (remembered via cookie), and can be reopened any time with the
     '💡 How does this page work?' button. Written for non-technical users.
+
+    Timing matters here: the sidebar cookie component triggers a rerun as it
+    mounts on every page navigation, and writing a cookie triggers another.
+    Either rerun instantly closes an open st.dialog ("flash"). So the tour
+    (a) skips the first script run and opens on the mount rerun instead, and
+    (b) defers the cookie write to the run *after* dismissal.
     """
 
     @st.dialog("💡 How this page works")
@@ -760,6 +789,7 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
             use_container_width=True,
             key=f"_tour_ok_{page_key}",
         ):
+            st.session_state["_tour_cookie_pending"] = page_key
             st.rerun()
 
     # Replay button — always available so users can re-read the guide.
@@ -767,23 +797,28 @@ def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
         _tour()
         return
 
-    # Auto-open once per browser per page.
+    # Deferred cookie write from a previous dismissal — happens on a quiet
+    # rerun where the resulting component refresh can't close anything.
+    pending = st.session_state.pop("_tour_cookie_pending", None)
+    if pending:
+        _persist_tour_seen(pending)
+
     state_key = f"_tour_seen_{page_key}"
     if st.session_state.get(state_key):
         return
-    st.session_state[state_key] = True
-    try:
-        from app.auth import _cookies  # lazy import — auth imports branding
 
-        cookies = _cookies()
-        raw = cookies.get(_TIPS_COOKIE) or ""
-        seen = set(raw.split(",")) if raw else set()
-        if page_key in seen:
-            return
-        seen.add(page_key)
-        cookies.set(_TIPS_COOKIE, ",".join(sorted(seen)), max_age=365 * 24 * 3600)
-    except Exception:
-        return  # cookies unavailable — never risk nagging on every visit
+    # First run after navigation: a cookie-component mount rerun is imminent
+    # and would close the dialog instantly. Open on the rerun instead.
+    run_key = f"_tour_runs_{page_key}"
+    runs = st.session_state.get(run_key, 0)
+    st.session_state[run_key] = runs + 1
+    if runs == 0:
+        return
+
+    if _tour_already_seen(page_key):
+        st.session_state[state_key] = True
+        return
+    st.session_state[state_key] = True
     _tour()
 
 

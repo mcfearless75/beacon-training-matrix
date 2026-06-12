@@ -298,22 +298,39 @@ def _welcome_dialog():
         "3. **You can't break anything** by clicking around, so have a look!\n"
     )
     if st.button("Show me how it all works", type="primary", use_container_width=True):
+        st.session_state["_welcome_cookie_pending"] = True
         st.switch_page("pages/11_Help.py")
     if st.button("No thanks, let me in", use_container_width=True):
+        st.session_state["_welcome_cookie_pending"] = True
         st.rerun()
 
 
 def _maybe_show_welcome() -> None:
-    """Show the welcome pop-up once per browser. Remembered via cookie."""
+    """Show the welcome pop-up once per browser. Remembered via cookie.
+
+    Mirrors page_tour's timing dance: skip the first script run (the cookie
+    component's mount rerun would close the dialog instantly) and defer the
+    cookie write until after dismissal for the same reason.
+    """
+    if st.session_state.pop("_welcome_cookie_pending", False):
+        try:
+            _cookies().set(_TOUR_COOKIE, "1", max_age=365 * 24 * 3600)
+        except Exception:
+            pass
     if st.session_state.get("_welcome_done"):
         return
-    st.session_state["_welcome_done"] = True
+    runs = st.session_state.get("_welcome_runs", 0)
+    st.session_state["_welcome_runs"] = runs + 1
+    if runs == 0:
+        return
     try:
         if _cookies().get(_TOUR_COOKIE):
+            st.session_state["_welcome_done"] = True
             return
-        _cookies().set(_TOUR_COOKIE, "1", max_age=365 * 24 * 3600)
     except Exception:
+        st.session_state["_welcome_done"] = True
         return  # cookies unavailable — don't risk nagging on every visit
+    st.session_state["_welcome_done"] = True
     _welcome_dialog()
 
 
