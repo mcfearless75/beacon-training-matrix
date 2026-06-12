@@ -759,89 +759,36 @@ def _persist_tour_seen(page_key: str) -> None:
 
 
 def page_tour(page_key: str, intro: str, steps: list[tuple[str, str]]) -> None:
-    """Page walkthrough: <details> replay toggle + first-visit auto-popup dialog.
+    """Inline help panel toggled by a button.
 
-    The replay uses a native HTML <details>/<summary> — 100% rerun-proof because
-    the browser owns the open/close state and Streamlit never resets it.
-
-    st.popover AND st.expander both close on any full st.rerun() in Streamlit
-    <1.55 (GitHub #9067). The cookie component fires 2 reruns on every page
-    navigation, killing any overlay immediately after it opens. <details> is
-    completely immune because it lives in the browser DOM, not Python state.
-
-    The auto-popup still uses st.dialog, deferred past the cookie mount rerun.
+    Open/closed state lives in session_state so it survives cookie-component
+    reruns — the root cause of every previous flash bug. Overlays (st.dialog,
+    st.popover, st.expander, <details>) all reset on any full rerun in
+    Streamlit <1.55. Session state does not.
     """
+    help_key = f"_help_open_{page_key}"
 
-    def _steps_raw() -> str:
-        rows = "".join(
-            f'<div class="tut-step" style="margin-bottom:10px;padding:14px 16px;">'
-            f'<div class="tut-num" style="flex:0 0 34px;width:34px;height:34px;font-size:1rem;">{i}</div>'
-            f'<div><div class="tut-title" style="font-size:0.95rem;">{title}</div>'
-            f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>'
-            for i, (title, body) in enumerate(steps, 1)
-        )
-        return f"<p><strong>{intro}</strong></p>{rows}"
+    if st.button("💡 How does this page work?", key=f"_help_btn_{page_key}"):
+        st.session_state[help_key] = not st.session_state.get(help_key, False)
 
-    def _steps_widgets() -> None:
-        st.markdown(f"**{intro}**")
-        for i, (title, body) in enumerate(steps, 1):
-            st.markdown(
-                f'<div class="tut-step" style="margin-bottom:10px;padding:14px 16px;">'
-                f'<div class="tut-num" style="flex:0 0 34px;width:34px;height:34px;font-size:1rem;">{i}</div>'
-                f'<div><div class="tut-title" style="font-size:0.95rem;">{title}</div>'
-                f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>',
-                unsafe_allow_html=True,
-            )
-
-    # Replay toggle — native HTML <details>, 100% rerun-proof.
-    st.markdown(
-        f'<details style="margin-bottom:1rem">'
-        f'<summary style="cursor:pointer;font-weight:500;font-size:0.9rem;">'
-        f'💡 How does this page work?</summary>'
-        f'<div style="padding-top:12px">{_steps_raw()}</div>'
-        f'</details>',
-        unsafe_allow_html=True,
-    )
-
-    # ------------------------------------------------------------------ #
-    # Auto-popup (first visit only)                                        #
-    # ------------------------------------------------------------------ #
-
-    @st.dialog("💡 How this page works")
-    def _auto_tour() -> None:
-        _steps_widgets()
-        if st.button(
-            "Got it — let me try!",
-            type="primary",
-            use_container_width=True,
-            key=f"_tour_ok_{page_key}",
-        ):
-            st.session_state["_tour_cookie_pending"] = page_key
-            st.rerun()
-
-    # Deferred cookie write from a previous dismissal.
-    pending = st.session_state.pop("_tour_cookie_pending", None)
-    if pending:
-        _persist_tour_seen(pending)
-
-    state_key = f"_tour_seen_{page_key}"
-    if st.session_state.get(state_key):
-        return
-
-    # Skip run 0 — the cookie component mount rerun is still coming and would
-    # close the dialog instantly. Open on run 1 instead.
-    run_key = f"_tour_runs_{page_key}"
-    runs = st.session_state.get(run_key, 0)
-    st.session_state[run_key] = runs + 1
-    if runs == 0:
-        return
-
-    if _tour_already_seen(page_key):
-        st.session_state[state_key] = True
-        return
-
-    st.session_state[state_key] = True
-    _auto_tour()
+    if st.session_state.get(help_key, False):
+        with st.container(border=True):
+            st.markdown(f"**{intro}**")
+            for i, (title, body) in enumerate(steps, 1):
+                st.markdown(
+                    f'<div class="tut-step" style="margin-bottom:10px;padding:14px 16px;">'
+                    f'<div class="tut-num" style="flex:0 0 34px;width:34px;height:34px;font-size:1rem;">{i}</div>'
+                    f'<div><div class="tut-title" style="font-size:0.95rem;">{title}</div>'
+                    f'<div class="tut-body" style="font-size:0.9rem;">{body}</div></div></div>',
+                    unsafe_allow_html=True,
+                )
+            if st.button(
+                "Got it — let me try!",
+                key=f"_help_close_{page_key}",
+                type="primary",
+                use_container_width=True,
+            ):
+                st.session_state[help_key] = False
 
 
 def tut_step(num: int, title: str, body: str, where: str = "") -> None:
