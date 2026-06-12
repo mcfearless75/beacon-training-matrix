@@ -25,3 +25,26 @@ def test_load_config_missing_required_raises(monkeypatch):
     import pytest
     with pytest.raises(RuntimeError, match="SUPABASE_URL"):
         load_config()
+
+
+def test_load_config_email_vars_optional_by_default(monkeypatch):
+    monkeypatch.setenv("SUPABASE_URL", "https://x.supabase.co")
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "srk")
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("APP_BASE_URL", raising=False)
+    monkeypatch.delenv("SENDER_EMAIL", raising=False)
+    cfg = load_config()
+    assert cfg.resend_api_key == ""
+
+
+def test_load_config_require_email_raises_when_missing(monkeypatch):
+    monkeypatch.setenv("SUPABASE_URL", "https://x.supabase.co")
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "srk")
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("APP_BASE_URL", raising=False)
+    monkeypatch.delenv("SENDER_EMAIL", raising=False)
+    import pytest
+    with pytest.raises(RuntimeError, match="RESEND_API_KEY"):
+        load_config(require_email=True)

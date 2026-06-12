@@ -51,7 +51,7 @@ def log_send(sb, item, recipient, status, msg_id=None, error=None):
 
 
 def run() -> dict:
-    cfg = load_config()
+    cfg = load_config(require_email=True)
     sb = service_client()
     settings = fetch_settings(sb)
     recipient = settings.get("reminder_recipient_email")

@@ -13,6 +13,11 @@ REQUIRED = [
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
+]
+
+# Only needed by the reminder cron / anything that actually sends email.
+# Deployments without email (e.g. the prospect sandbox) can omit them.
+EMAIL_REQUIRED = [
     "RESEND_API_KEY",
     "APP_BASE_URL",
     "SENDER_EMAIL",
@@ -30,24 +35,22 @@ class Config:
     sender_name: str
 
 
-def load_config() -> Config:
-    missing = [k for k in REQUIRED if not os.getenv(k)]
+def load_config(require_email: bool = False) -> Config:
+    required = REQUIRED + (EMAIL_REQUIRED if require_email else [])
+    missing = [k for k in required if not os.getenv(k)]
     if missing:
-        # Diagnostic: list visible env keys so we can see what the runtime actually has.
-        visible = sorted(k for k in os.environ.keys() if not k.startswith("_"))
-        raise RuntimeError(
-            f"Missing required env vars: {', '.join(missing)}. "
-            f"Visible env keys ({len(visible)}): {', '.join(visible)}"
-        )
-    app_base_url = os.environ["APP_BASE_URL"]
-    if not (app_base_url.startswith("https://") or app_base_url.startswith("http://localhost")):
+        raise RuntimeError(f"Missing required env vars: {', '.join(missing)}")
+    app_base_url = os.getenv("APP_BASE_URL", "")
+    if app_base_url and not (
+        app_base_url.startswith("https://") or app_base_url.startswith("http://localhost")
+    ):
         raise RuntimeError("APP_BASE_URL must be https:// (or http://localhost for dev)")
     return Config(
         supabase_url=os.environ["SUPABASE_URL"],
         supabase_anon_key=os.environ["SUPABASE_ANON_KEY"],
         supabase_service_role_key=os.environ["SUPABASE_SERVICE_ROLE_KEY"],
-        resend_api_key=os.environ["RESEND_API_KEY"],
-        app_base_url=os.environ["APP_BASE_URL"],
-        sender_email=os.environ["SENDER_EMAIL"],
-        sender_name=os.getenv("SENDER_NAME", "Beacon Training Matrix"),
+        resend_api_key=os.getenv("RESEND_API_KEY", ""),
+        app_base_url=app_base_url,
+        sender_email=os.getenv("SENDER_EMAIL", ""),
+        sender_name=os.getenv("SENDER_NAME", os.getenv("APP_NAME", "Beacon Training Matrix")),
     )

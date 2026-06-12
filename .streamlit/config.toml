@@ -24,4 +24,6 @@ gatherUsageStats = false
 
 [client]
 toolbarMode = "minimal"
-showErrorDetails = true
+# "none": users see a generic error, never a traceback — tracebacks leak
+# internal file paths and env var names to whoever is looking at the screen.
+showErrorDetails = "none"
