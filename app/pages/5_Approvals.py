@@ -140,10 +140,14 @@ else:
                     "New expiry date",
                     key=f"expiry_{rec['id']}",
                     value=prefill_expiry,
+                    min_value=date(2000, 1, 1),
+                    max_value=date(2100, 1, 1),
                     disabled=is_lifetime,
                 )
                 if not is_lifetime and is_expiry_in_past(new_expiry, today=date.today()):
                     st.caption("⚠️ This date is already expired — is that right?")
+
+                chosen_expiry = None if is_lifetime else new_expiry
 
                 reject_key = f"reject_reason_{rec['id']}"
                 reason = st.text_area(
@@ -156,7 +160,7 @@ else:
                 approve_col, reject_col = st.columns(2)
                 with approve_col:
                     if st.button("Approve", key=f"approve_{rec['id']}", type="primary", use_container_width=True):
-                        error = validate_approval(None if is_lifetime else new_expiry, is_lifetime)
+                        error = validate_approval(chosen_expiry, is_lifetime)
                         if error:
                             st.error(error)
                         else:
@@ -168,7 +172,7 @@ else:
                                     "certificate_reviewed_at": datetime.now(timezone.utc).isoformat(),
                                     "certificate_reviewed_by": reviewer_id,
                                     "certificate_reject_reason": None,
-                                    "expiry_date": None if is_lifetime else new_expiry.isoformat(),
+                                    "expiry_date": chosen_expiry.isoformat() if chosen_expiry else None,
                                 }).eq("id", rec["id"]).execute()
                                 st.success(f"Approved certificate for {person_name}.")
                                 st.rerun()

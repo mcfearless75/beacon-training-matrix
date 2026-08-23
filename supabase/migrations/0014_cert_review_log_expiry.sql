@@ -1,7 +1,7 @@
--- Phase 4: capture the expiry date set at certificate approval time.
--- Closes a gap where approving a certificate never recorded (or updated)
--- the expiry date it was approved with, leaving the audit trail silent on
--- the one field the reminder cron depends on.
+-- Phase 4: capture the record's expiry_date at the moment of either decision
+-- (approved or rejected). Closes a gap where approving a certificate never
+-- recorded (or updated) the expiry date it was approved with, leaving the
+-- audit trail silent on the one field the reminder cron depends on.
 
 alter table public.certificate_review_log
     add column if not exists expiry_date date;
