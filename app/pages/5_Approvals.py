@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 import streamlit as st
 
 from app.auth import current_user_email, get_session, require_admin
+from beacon.approvals import is_expiry_in_past, validate_approval
 from app.branding import help_box, inject_css, page_header, page_tour
 from beacon.db import service_client
 
@@ -124,6 +125,26 @@ else:
                     st.caption("No certificate file attached.")
 
             with col2:
+                prefill_expiry = None
+                if rec.get("expiry_date"):
+                    try:
+                        prefill_expiry = date.fromisoformat(rec["expiry_date"])
+                    except Exception:
+                        prefill_expiry = None
+
+                is_lifetime = st.checkbox(
+                    "No expiry (lifetime cert)",
+                    key=f"lifetime_{rec['id']}",
+                )
+                new_expiry = st.date_input(
+                    "New expiry date",
+                    key=f"expiry_{rec['id']}",
+                    value=prefill_expiry,
+                    disabled=is_lifetime,
+                )
+                if not is_lifetime and is_expiry_in_past(new_expiry, today=date.today()):
+                    st.caption("⚠️ This date is already expired — is that right?")
+
                 reject_key = f"reject_reason_{rec['id']}"
                 reason = st.text_area(
                     "Rejection reason (required to reject)",
@@ -135,19 +156,24 @@ else:
                 approve_col, reject_col = st.columns(2)
                 with approve_col:
                     if st.button("Approve", key=f"approve_{rec['id']}", type="primary", use_container_width=True):
-                        session = get_session()
-                        reviewer_id = session.user.id if session and getattr(session, "user", None) else None
-                        try:
-                            sb.table("training_records").update({
-                                "certificate_status": "approved",
-                                "certificate_reviewed_at": datetime.now(timezone.utc).isoformat(),
-                                "certificate_reviewed_by": reviewer_id,
-                                "certificate_reject_reason": None,
-                            }).eq("id", rec["id"]).execute()
-                            st.success(f"Approved certificate for {person_name}.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Could not approve — {e}")
+                        error = validate_approval(None if is_lifetime else new_expiry, is_lifetime)
+                        if error:
+                            st.error(error)
+                        else:
+                            session = get_session()
+                            reviewer_id = session.user.id if session and getattr(session, "user", None) else None
+                            try:
+                                sb.table("training_records").update({
+                                    "certificate_status": "approved",
+                                    "certificate_reviewed_at": datetime.now(timezone.utc).isoformat(),
+                                    "certificate_reviewed_by": reviewer_id,
+                                    "certificate_reject_reason": None,
+                                    "expiry_date": None if is_lifetime else new_expiry.isoformat(),
+                                }).eq("id", rec["id"]).execute()
+                                st.success(f"Approved certificate for {person_name}.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Could not approve — {e}")
 
                 with reject_col:
                     if st.button("Reject", key=f"reject_{rec['id']}", use_container_width=True):
