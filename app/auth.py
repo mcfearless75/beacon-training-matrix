@@ -95,6 +95,25 @@ def _friendly_otp_error(e: Exception) -> str:
     return f"Sign-in failed: {e}"
 
 
+def _friendly_password_error(e: Exception) -> str:
+    msg = str(e).lower()
+    if "invalid login" in msg or "invalid" in msg:
+        return "Email or password is incorrect."
+    if "email not confirmed" in msg:
+        return "This email has not been confirmed yet. Use the email-code option once, then you can use a password."
+    if "rate limit" in msg:
+        return "Too many sign-in attempts. Please wait a few minutes and try again."
+    return f"Sign-in failed: {e}"
+
+
+def _finish_login(session) -> None:
+    st.session_state["sb_session"] = session
+    st.session_state.pop("otp_stage", None)
+    st.session_state.pop("otp_email", None)
+    _save_rt_cookie(session)
+    st.rerun()
+
+
 def login_screen():
     load_config()  # validates env at startup; no callback redirect needed for OTP flow
     inject_css()
@@ -123,68 +142,103 @@ def login_screen():
               <div class="login-eyebrow">{BRAND_NAME}</div>
               <h1>Training Matrix</h1>
               <div class="login-tag">Workforce compliance, simplified.<br>
-              Enter your work email to sign in.</div>
+              Sign in with your work email.</div>
               <div class="login-divider"></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        stage = st.session_state.get("otp_stage", "request_email")
+        method = st.radio(
+            "Sign-in method",
+            ["Password", "Email code"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="login_method",
+        )
 
-        if stage == "request_email":
+        if method == "Password":
             email = st.text_input(
                 "Work email",
                 placeholder="you@yourcompany.co.uk",
                 label_visibility="collapsed",
-                key="otp_email_input",
+                key="pw_email_input",
             )
-            if st.button("Send sign-in code", use_container_width=True, type="primary") and email:
-                sb = anon_client()
-                try:
-                    sb.auth.sign_in_with_otp({"email": email})
-                    st.session_state["otp_email"] = email
-                    st.session_state["otp_stage"] = "verify_code"
-                    st.rerun()
-                except Exception as e:
-                    st.error(_friendly_otp_error(e))
-
-        elif stage == "verify_code":
-            target_email = st.session_state.get("otp_email", "")
-            st.info(f"Code sent to **{target_email}**. Check your inbox.")
-            code = st.text_input(
-                "Sign-in code",
-                placeholder="Enter your 8-digit code",
-                max_chars=8,
+            password = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Password",
                 label_visibility="collapsed",
-                key="otp_code_input",
+                key="pw_password_input",
             )
-            verify_clicked = st.button("Verify and sign in", use_container_width=True, type="primary")
-            if st.button("← Use a different email", use_container_width=True):
-                st.session_state["otp_stage"] = "request_email"
-                st.rerun()
-            if verify_clicked and code:
-                sb = anon_client()
-                try:
-                    response = sb.auth.verify_otp({
-                        "email": target_email,
-                        "token": code.strip(),
-                        "type": "email",
-                    })
-                    session = getattr(response, "session", response)
-                    st.session_state["sb_session"] = session
-                    st.session_state.pop("otp_stage", None)
-                    st.session_state.pop("otp_email", None)
-                    # Persist refresh token so session survives container restarts
-                    _save_rt_cookie(session)
+            if st.button("Sign in", use_container_width=True, type="primary"):
+                if not email or not password:
+                    st.error("Enter your email and password.")
+                else:
+                    sb = anon_client()
+                    try:
+                        response = sb.auth.sign_in_with_password(
+                            {"email": email.strip(), "password": password}
+                        )
+                        session = getattr(response, "session", response)
+                        if not session:
+                            st.error("Sign-in failed. Check the email and password.")
+                        else:
+                            _finish_login(session)
+                    except Exception as e:
+                        st.error(_friendly_password_error(e))
+
+        else:
+            stage = st.session_state.get("otp_stage", "request_email")
+
+            if stage == "request_email":
+                email = st.text_input(
+                    "Work email",
+                    placeholder="you@yourcompany.co.uk",
+                    label_visibility="collapsed",
+                    key="otp_email_input",
+                )
+                if st.button("Send sign-in code", use_container_width=True, type="primary") and email:
+                    sb = anon_client()
+                    try:
+                        sb.auth.sign_in_with_otp({"email": email})
+                        st.session_state["otp_email"] = email
+                        st.session_state["otp_stage"] = "verify_code"
+                        st.rerun()
+                    except Exception as e:
+                        st.error(_friendly_otp_error(e))
+
+            elif stage == "verify_code":
+                target_email = st.session_state.get("otp_email", "")
+                st.info(f"Code sent to **{target_email}**. Check your inbox.")
+                code = st.text_input(
+                    "Sign-in code",
+                    placeholder="Enter your 8-digit code",
+                    max_chars=8,
+                    label_visibility="collapsed",
+                    key="otp_code_input",
+                )
+                verify_clicked = st.button("Verify and sign in", use_container_width=True, type="primary")
+                if st.button("← Use a different email", use_container_width=True):
+                    st.session_state["otp_stage"] = "request_email"
                     st.rerun()
-                except Exception as e:
-                    st.error(_friendly_otp_error(e))
+                if verify_clicked and code:
+                    sb = anon_client()
+                    try:
+                        response = sb.auth.verify_otp({
+                            "email": target_email,
+                            "token": code.strip(),
+                            "type": "email",
+                        })
+                        session = getattr(response, "session", response)
+                        _finish_login(session)
+                    except Exception as e:
+                        st.error(_friendly_otp_error(e))
 
         st.markdown(
             '<div class="login-footer">'
             f'{BRAND_NAME} <span class="dot">·</span> {BRAND_TAGLINE}'
-            ' <span class="dot">·</span> Secure OTP Sign-in'
+            ' <span class="dot">·</span> Secure sign-in'
             '</div>',
             unsafe_allow_html=True,
         )
